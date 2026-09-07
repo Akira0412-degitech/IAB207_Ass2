@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Amplifi — Independent live music in South East Queensland</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="static/style/style.css" rel="stylesheet">
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-amplifi sticky-top">
+  <div class="container">
+    <a class="navbar-brand" href="index.html">Amplifi</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav" aria-controls="mainNav" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="mainNav">
+      <ul class="navbar-nav ms-auto align-items-lg-center">
+        <li class="nav-item"><a class="nav-link active" aria-current="page" href="index.html">Gigs</a></li>
+        <li class="nav-item"><a class="nav-link" href="create.html">List a gig</a></li>
+        <li class="nav-item"><a class="nav-link" href="bookings.html">My tickets</a></li>
+        <li class="nav-item ms-lg-3 mt-2 mt-lg-0"><a class="btn btn-ink" href="#">Log in</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-9">
+        <p class="meta mb-2" style="color:#ff3d7f;">Brisbane · Gold Coast · Sunshine Coast</p>
+        <h1>Small rooms.<br>Loud nights.<br><span class="accent">Every week.</span></h1>
+        <p class="lede mt-3 mb-4">Amplifi lists gigs from the independent circuit — the 150-capacity rooms where touring bands play before anyone has heard of them. Browse what's on, grab a ticket, argue in the comments.</p>
+        <a href="#whats-on" class="btn btn-ink">Browse gigs</a>
+        <a href="create.html" class="btn btn-outline-ink ms-2" style="color:#f2f0eb;border-color:#f2f0eb;">List your gig</a>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main class="container">
+
+  <!-- Genre browsing -->
+  <section aria-labelledby="genres-heading">
+    <div class="rule-heading d-flex flex-wrap justify-content-between align-items-baseline gap-2">
+      <h2 id="genres-heading">Browse by genre</h2>
+      <span class="meta">6 categories</span>
+    </div>
+    <div class="d-flex flex-wrap gap-2 mt-3" role="group" aria-label="Filter gigs by genre">
+      <input type="radio" class="btn-check" name="genre" id="g-all" checked>
+      <label class="btn genre-chip" for="g-all">All gigs</label>
+
+      <input type="radio" class="btn-check" name="genre" id="g-rock">
+      <label class="btn genre-chip" for="g-rock">Rock / Punk</label>
+
+      <input type="radio" class="btn-check" name="genre" id="g-metal">
+      <label class="btn genre-chip" for="g-metal">Metal / Heavy</label>
+
+      <input type="radio" class="btn-check" name="genre" id="g-elec">
+      <label class="btn genre-chip" for="g-elec">Electronic</label>
+
+      <input type="radio" class="btn-check" name="genre" id="g-hip">
+      <label class="btn genre-chip" for="g-hip">Hip-Hop / R&amp;B</label>
+
+      <input type="radio" class="btn-check" name="genre" id="g-jazz">
+      <label class="btn genre-chip" for="g-jazz">Jazz / Blues</label>
+
+      <input type="radio" class="btn-check" name="genre" id="g-folk">
+      <label class="btn genre-chip" for="g-folk">Folk / Acoustic</label>
+    </div>
+  </section>
+
+  <!-- Gig listing -->
+  <section aria-labelledby="whats-on" id="whats-on">
+    <div class="rule-heading d-flex flex-wrap justify-content-between align-items-baseline gap-2">
+      <h2 id="whats-on-heading">What's on</h2>
+      <span class="meta">Showing 6 of 42</span>
+    </div>
+
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 g-4 mt-1">
+
+      <div class="col">
+        <a class="card-link-plain" href="event.html">
+          <article class="card gig-card">
+            <img src="static/img/gig-halcyon.jpg" class="card-img-top" alt="Poster for Halcyon Drift at The Zoo">
+            <div class="card-body">
+              <span class="status status-open">Open</span>
+              <h3 class="card-title mt-2">Halcyon Drift</h3>
+              <p class="meta mb-2">Rock / Punk · 18+</p>
+              <p class="mb-2">With Paper Ferns and Slow Tourist. Doors 7:30pm.</p>
+              <p class="meta mb-0">Sat 12 Sep · The Zoo, Fortitude Valley</p>
+              <p class="meta mb-0">$28 · 34 tickets left</p>
+            </div>
+          </article>
+        </a>
+      </div>
+
+      <div class="col">
+        <a class="card-link-plain" href="event.html">
+          <article class="card gig-card">
+            <img src="static/img/gig-quarry.jpg" class="card-img-top" alt="Poster for Quarry Belt at Crowbar">
+            <div class="card-body">
+              <span class="status status-soldout">Sold out</span>
+              <h3 class="card-title mt-2">Quarry Belt</h3>
+              <p class="meta mb-2">Metal / Heavy · 18+</p>
+              <p class="mb-2">Album launch with Ironbark and Hollow Coast.</p>
+              <p class="meta mb-0">Fri 18 Sep · Crowbar, Brisbane</p>
+              <p class="meta mb-0">$35 · 0 tickets left</p>
+            </div>
+          </article>
+        </a>
+      </div>
+
+      <div class="col">
+        <a class="card-link-plain" href="event.html">
+          <article class="card gig-card">
+            <img src="static/img/gig-lowtide.jpg" class="card-img-top" alt="Poster for Low Tide Club at Mo's Desert Clubhouse">
+            <div class="card-body">
+              <span class="status status-open">Open</span>
+              <h3 class="card-title mt-2">Low Tide Club</h3>
+              <p class="meta mb-2">Electronic · All ages</p>
+              <p class="mb-2">Live modular set plus two support DJs.</p>
+              <p class="meta mb-0">Sat 26 Sep · Mo's Desert Clubhouse, Burleigh</p>
+              <p class="meta mb-0">$22 · 118 tickets left</p>
+            </div>
+          </article>
+        </a>
+      </div>
+
+      <div class="col">
+        <a class="card-link-plain" href="event.html">
+          <article class="card gig-card is-cancelled">
+            <img src="static/img/gig-verandah.jpg" class="card-img-top" alt="Poster for Verandah Saints at The Triffid">
+            <div class="card-body">
+              <span class="status status-cancelled">Cancelled</span>
+              <h3 class="card-title mt-2">Verandah Saints</h3>
+              <p class="meta mb-2">Folk / Acoustic · 18+</p>
+              <p class="mb-2">Cancelled by the promoter. Refunds processed automatically.</p>
+              <p class="meta mb-0">Thu 2 Oct · The Triffid, Newstead</p>
+              <p class="meta mb-0">$30 · Refunds issued</p>
+            </div>
+          </article>
+        </a>
+      </div>
+
+      <div class="col">
+        <a class="card-link-plain" href="event.html">
+          <article class="card gig-card is-past">
+            <img src="static/img/gig-pilotlight.jpg" class="card-img-top" alt="Poster for Pilot Light at The Bearded Lady">
+            <div class="card-body">
+              <span class="status status-inactive">Inactive</span>
+              <h3 class="card-title mt-2">Pilot Light</h3>
+              <p class="meta mb-2">Hip-Hop / R&amp;B · 18+</p>
+              <p class="mb-2">This gig has already happened. Comments stay open.</p>
+              <p class="meta mb-0">Sat 9 Aug · The Bearded Lady, West End</p>
+              <p class="meta mb-0">$25 · Event finished</p>
+            </div>
+          </article>
+        </a>
+      </div>
+
+      <div class="col">
+        <a class="card-link-plain" href="event.html">
+          <article class="card gig-card">
+            <img src="static/img/gig-fernway.jpg" class="card-img-top" alt="Poster for Fernway at Miami Marketta">
+            <div class="card-body">
+              <span class="status status-open">Open</span>
+              <h3 class="card-title mt-2">Fernway</h3>
+              <p class="meta mb-2">Jazz / Blues · All ages</p>
+              <p class="mb-2">Six-piece, two sets, no support.</p>
+              <p class="meta mb-0">Sun 11 Oct · Miami Marketta, Gold Coast</p>
+              <p class="meta mb-0">$18 · 61 tickets left</p>
+            </div>
+          </article>
+        </a>
+      </div>
+
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <div class="container">
+    <div class="row g-4">
+      <div class="col-md-5">
+        <p class="display-face h4 mb-2" style="color:#f2f0eb;">Amplifi</p>
+        <p class="mb-0">Amplifi acknowledges the Traditional Custodians of the lands on which these gigs take place, and pays respect to Elders past and present.</p>
+      </div>
+      <div class="col-6 col-md-3">
+        <p class="meta mb-2">Browse</p>
+        <ul class="list-unstyled">
+          <li><a href="index.html">All gigs</a></li>
+          <li><a href="index.html#whats-on">By genre</a></li>
+        </ul>
+      </div>
+      <div class="col-6 col-md-4">
+        <p class="meta mb-2">Your account</p>
+        <ul class="list-unstyled">
+          <li><a href="create.html">List a gig</a></li>
+          <li><a href="bookings.html">My tickets</a></li>
+        </ul>
+      </div>
+    </div>
+    <p class="meta mt-4 mb-0">Front-end prototype · QUT assignment</p>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
