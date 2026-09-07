@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>List a gig — Amplifi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="static/style/style.css" rel="stylesheet">
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-amplifi sticky-top">
+  <div class="container">
+    <a class="navbar-brand" href="index.html">Amplifi</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav" aria-controls="mainNav" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="mainNav">
+      <ul class="navbar-nav ms-auto align-items-lg-center">
+        <li class="nav-item"><a class="nav-link" href="index.html">Gigs</a></li>
+        <li class="nav-item"><a class="nav-link active" aria-current="page" href="create.html">List a gig</a></li>
+        <li class="nav-item"><a class="nav-link" href="bookings.html">My tickets</a></li>
+        <li class="nav-item ms-lg-3 mt-2 mt-lg-0"><a class="btn btn-ink" href="#">Log in</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<main class="container py-4">
+
+  <div class="row">
+    <div class="col-lg-9 col-xl-8">
+      <h1 style="font-size:clamp(2rem,6vw,3rem);">List a gig</h1>
+      <p class="meta mb-4">Only you can edit this listing after it's published. Status is set automatically.</p>
+
+      <form novalidate>
+
+        <fieldset class="panel">
+          <legend>The gig</legend>
+
+          <div class="mb-3">
+            <label for="title" class="form-label">Gig title</label>
+            <input type="text" class="form-control" id="title" name="title" placeholder="Halcyon Drift — east coast send-off" required>
+            <div class="form-text">This is the headline shown on the home page.</div>
+          </div>
+
+          <div class="mb-3">
+            <label for="description" class="form-label">Description</label>
+            <textarea class="form-control" id="description" name="description" rows="5" placeholder="Who's playing, what to expect, anything punters need to know" required></textarea>
+          </div>
+
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label for="genre" class="form-label">Genre</label>
+              <select class="form-select" id="genre" name="genre" required>
+                <option value="" selected disabled>Choose a genre</option>
+                <option>Rock / Punk</option>
+                <option>Metal / Heavy</option>
+                <option>Electronic</option>
+                <option>Hip-Hop / R&amp;B</option>
+                <option>Jazz / Blues</option>
+                <option>Folk / Acoustic</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label for="age" class="form-label">Age restriction</label>
+              <select class="form-select" id="age" name="age" required>
+                <option value="" selected disabled>Choose a restriction</option>
+                <option>All ages</option>
+                <option>15+</option>
+                <option>18+</option>
+              </select>
+              <div class="form-text">Licensed venues are almost always 18+.</div>
+            </div>
+          </div>
+        </fieldset>
+
+        <fieldset class="panel">
+          <legend>Lineup</legend>
+
+          <div class="row g-3 align-items-end mb-3">
+            <div class="col-sm-7">
+              <label for="artist1" class="form-label">Headline act</label>
+              <input type="text" class="form-control" id="artist1" name="artist1" placeholder="Halcyon Drift" required>
+            </div>
+            <div class="col-sm-5">
+              <label for="set1" class="form-label">Set time</label>
+              <input type="time" class="form-control" id="set1" name="set1" value="21:15">
+            </div>
+          </div>
+
+          <div class="row g-3 align-items-end mb-3">
+            <div class="col-sm-7">
+              <label for="artist2" class="form-label">Support act</label>
+              <input type="text" class="form-control" id="artist2" name="artist2" placeholder="Slow Tourist">
+            </div>
+            <div class="col-sm-5">
+              <label for="set2" class="form-label">Set time</label>
+              <input type="time" class="form-control" id="set2" name="set2" value="20:35">
+            </div>
+          </div>
+
+          <div class="row g-3 align-items-end">
+            <div class="col-sm-7">
+              <label for="artist3" class="form-label">Support act</label>
+              <input type="text" class="form-control" id="artist3" name="artist3" placeholder="Paper Ferns">
+            </div>
+            <div class="col-sm-5">
+              <label for="set3" class="form-label">Set time</label>
+              <input type="time" class="form-control" id="set3" name="set3" value="20:00">
+            </div>
+          </div>
+        </fieldset>
+
+        <fieldset class="panel">
+          <legend>When and where</legend>
+
+          <div class="row g-3">
+            <div class="col-md-4">
+              <label for="date" class="form-label">Date</label>
+              <input type="date" class="form-control" id="date" name="date" required>
+            </div>
+            <div class="col-6 col-md-4">
+              <label for="doors" class="form-label">Doors open</label>
+              <input type="time" class="form-control" id="doors" name="doors" required>
+            </div>
+            <div class="col-6 col-md-4">
+              <label for="finish" class="form-label">Finishes</label>
+              <input type="time" class="form-control" id="finish" name="finish" required>
+            </div>
+          </div>
+
+          <div class="row g-3 mt-0">
+            <div class="col-md-7">
+              <label for="venue" class="form-label">Venue</label>
+              <input type="text" class="form-control" id="venue" name="venue" placeholder="The Zoo" required>
+            </div>
+            <div class="col-md-5">
+              <label for="suburb" class="form-label">Suburb</label>
+              <input type="text" class="form-control" id="suburb" name="suburb" placeholder="Fortitude Valley" required>
+            </div>
+            <div class="col-12">
+              <label for="address" class="form-label">Street address</label>
+              <input type="text" class="form-control" id="address" name="address" placeholder="711 Ann Street">
+            </div>
+          </div>
+        </fieldset>
+
+        <fieldset class="panel">
+          <legend>Tickets</legend>
+
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label for="price" class="form-label">Ticket price (AUD)</label>
+              <div class="input-group">
+                <span class="input-group-text" style="border:2px solid #14110f;border-radius:0;">$</span>
+                <input type="number" class="form-control" id="price" name="price" min="0" step="0.50" placeholder="28.00" required>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <label for="capacity" class="form-label">Tickets available</label>
+              <input type="number" class="form-control" id="capacity" name="capacity" min="1" placeholder="220" required>
+              <div class="form-text">The gig is marked sold out automatically when these run out.</div>
+            </div>
+          </div>
+        </fieldset>
+
+        <fieldset class="panel">
+          <legend>Poster</legend>
+
+          <label for="image" class="form-label">Gig image</label>
+          <input type="file" class="form-control" id="image" name="image" accept="image/*">
+          <div class="form-text">Landscape works best. JPG or PNG, up to 5 MB.</div>
+        </fieldset>
+
+        <fieldset class="panel">
+          <legend>Acknowledgement of Country</legend>
+
+          <p class="mb-3">Choose how your listing acknowledges the Traditional Custodians of the land the gig is held on.</p>
+
+          <div class="form-check mb-3">
+            <input class="form-check-input" type="radio" name="aoc" id="aoc-none" value="none">
+            <label class="form-check-label" for="aoc-none">
+              <strong>No Acknowledgement of Country</strong>
+              <span class="d-block form-text">Nothing is shown on your listing.</span>
+            </label>
+          </div>
+
+          <div class="form-check mb-3">
+            <input class="form-check-input" type="radio" name="aoc" id="aoc-generic" value="generic" checked>
+            <label class="form-check-label" for="aoc-generic">
+              <strong>Generic</strong>
+              <span class="d-block form-text">A general statement that does not name a specific group.</span>
+            </label>
+          </div>
+
+          <div class="form-check mb-3">
+            <input class="form-check-input" type="radio" name="aoc" id="aoc-enhanced" value="enhanced">
+            <label class="form-check-label" for="aoc-enhanced">
+              <strong>Enhanced</strong>
+              <span class="d-block form-text">Names the Traditional Custodians of the land your venue sits on.</span>
+            </label>
+          </div>
+
+          <label for="aoc-group" class="form-label">Traditional Custodians (enhanced only)</label>
+          <input type="text" class="form-control" id="aoc-group" name="aoc-group" placeholder="Turrbal and Yuggera peoples">
+          <div class="form-text">Check with your local Land Council if you're unsure. Use the generic option rather than guessing.</div>
+        </fieldset>
+
+        <div class="d-flex flex-wrap gap-2 mb-5">
+          <button type="submit" class="btn btn-ink">Publish gig</button>
+          <button type="button" class="btn btn-outline-ink">Save as draft</button>
+          <a href="index.html" class="btn btn-outline-ink">Cancel</a>
+        </div>
+
+      </form>
+    </div>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="container">
+    <p class="display-face h4 mb-2" style="color:#f2f0eb;">Amplifi</p>
+    <p class="mb-0">Amplifi acknowledges the Traditional Custodians of the lands on which these gigs take place, and pays respect to Elders past and present.</p>
+    <p class="meta mt-4 mb-0">Front-end prototype · QUT assignment</p>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
