@@ -1,21 +1,24 @@
-{% include "base.html" %}
+{% extends "base.html" %}
 {% from "bootstrap5/form.html" import render_form %}
-{% block body %}
 
-<div class="page-header">
-    <h4>{{heading}}</h4>
-</div>
+{% block content %}
+<main class="container py-4">
 
-<!-- Form rendering is simple and easy if using WTForms and Bootstrap -->
-<div class="col-md-6">
-    {{render_form(form)}}
-</div>
+  <h1 style="font-size:clamp(2rem,6vw,3rem);">{{ heading }}</h1>
 
-<!-- When you have Login form, then show the user a link to register -->
-{% if heading == 'Login' %}
-<div class="col-md-4">
-    <p>New user? <a href="{{url_for('register')}}">Click here</a> to register.</p>
-</div>
-{% endif %}
+  <div class="col-md-6">
+    {{ render_form(form) }}
+  </div>
 
+  {% if heading == 'Login' %}
+  <div class="col-md-6 mt-3">
+    <!-- TODO(#2 Register): once the auth.register route exists, turn this
+         into a real link with url_for('auth.register'). Left as plain text
+         for now so this page doesn't crash with a BuildError before that
+         route is implemented. -->
+    <p>New user? Registration is coming soon.</p>
+  </div>
+  {% endif %}
+
+</main>
 {% endblock %}
