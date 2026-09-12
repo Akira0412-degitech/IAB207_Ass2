@@ -27,7 +27,13 @@
                         <li class="nav-item"><a class="nav-link{% if request.endpoint == 'main.index' %} active{% endif %}" aria-current="page" href="{{ url_for('main.index') }}">Gigs</a></li>
                         <li class="nav-item"><a class="nav-link{% if request.endpoint == 'main.create_event' %} active{% endif %}" href="{{ url_for('main.create_event') }}">List a gig</a></li>
                         <li class="nav-item"><a class="nav-link{% if request.endpoint == 'main.bookings' %} active{% endif %}" href="{{ url_for('main.bookings') }}">My tickets</a></li>
+                        {% if current_user.is_authenticated %}
+                        <li class="nav-item mt-2 mt-lg-0"><span class="nav-link disabled">Hi, {{ current_user.first_name }}</span></li>
+                        <li class="nav-item ms-lg-3 mt-2 mt-lg-0"><a class="btn btn-outline-ink" href="{{ url_for('auth.logout') }}">Log out</a></li>
+                        {% else %}
+                        <!-- TODO(#2 Register): add a "Register" link here (url_for('auth.register')) once that route exists -->
                         <li class="nav-item ms-lg-3 mt-2 mt-lg-0"><a class="btn btn-ink" href="{{ url_for('auth.login') }}">Log in</a></li>
+                        {% endif %}
                     </ul>
                 </div>
             </div>
