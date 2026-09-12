@@ -1,34 +1,8 @@
-<!DOCTYPE html>
-<html lang="en-AU">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>My tickets — Amplifi</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Anton&family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-<link href="static/style/style.css" rel="stylesheet">
-</head>
-<body>
+{% extends "base.html" %}
 
-<nav class="navbar navbar-expand-lg navbar-amplifi sticky-top">
-  <div class="container">
-    <a class="navbar-brand" href="index.html">Amplifi</a>
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav" aria-controls="mainNav" aria-expanded="false" aria-label="Toggle navigation">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="collapse navbar-collapse" id="mainNav">
-      <ul class="navbar-nav ms-auto align-items-lg-center">
-        <li class="nav-item"><a class="nav-link" href="index.html">Gigs</a></li>
-        <li class="nav-item"><a class="nav-link" href="create.html">List a gig</a></li>
-        <li class="nav-item"><a class="nav-link active" aria-current="page" href="bookings.html">My tickets</a></li>
-        <li class="nav-item ms-lg-3 mt-2 mt-lg-0"><a class="btn btn-ink" href="#">Log in</a></li>
-      </ul>
-    </div>
-  </div>
-</nav>
+{% block title %}My tickets — Amplifi{% endblock %}
 
+{% block content %}
 <main class="container py-4">
 
   <h1 style="font-size:clamp(2rem,6vw,3rem);">My tickets</h1>
@@ -38,7 +12,7 @@
     <div class="col-12 col-xl-10">
 
       <article class="stub">
-        <img src="static/img/gig-halcyon.jpg" class="stub-img" alt="Poster for Halcyon Drift at The Zoo">
+        <img src="{{ url_for('static', filename='img/gig-halcyon.jpg') }}" class="stub-img" alt="Poster for Halcyon Drift at The Zoo">
         <div class="stub-body">
           <span class="status status-open">Open</span>
           <h2 class="h4 mt-2 mb-1">Halcyon Drift</h2>
@@ -54,7 +28,7 @@
       </article>
 
       <article class="stub">
-        <img src="static/img/gig-lowtide.jpg" class="stub-img" alt="Poster for Low Tide Club at Mo's Desert Clubhouse">
+        <img src="{{ url_for('static', filename='img/gig-lowtide.jpg') }}" class="stub-img" alt="Poster for Low Tide Club at Mo's Desert Clubhouse">
         <div class="stub-body">
           <span class="status status-open">Open</span>
           <h2 class="h4 mt-2 mb-1">Low Tide Club</h2>
@@ -70,7 +44,7 @@
       </article>
 
       <article class="stub">
-        <img src="static/img/gig-verandah.jpg" class="stub-img" alt="Poster for Verandah Saints at The Triffid">
+        <img src="{{ url_for('static', filename='img/gig-verandah.jpg') }}" class="stub-img" alt="Poster for Verandah Saints at The Triffid">
         <div class="stub-body">
           <span class="status status-cancelled">Cancelled</span>
           <h2 class="h4 mt-2 mb-1">Verandah Saints</h2>
@@ -86,7 +60,7 @@
       </article>
 
       <article class="stub">
-        <img src="static/img/gig-pilotlight.jpg" class="stub-img" alt="Poster for Pilot Light at The Bearded Lady">
+        <img src="{{ url_for('static', filename='img/gig-pilotlight.jpg') }}" class="stub-img" alt="Poster for Pilot Light at The Bearded Lady">
         <div class="stub-body">
           <span class="status status-inactive">Inactive</span>
           <h2 class="h4 mt-2 mb-1">Pilot Light</h2>
@@ -104,18 +78,7 @@
     </div>
   </div>
 
-  <a href="index.html" class="btn btn-ink mt-3">Find another gig</a>
+  <a href="{{ url_for('main.index') }}" class="btn btn-ink mt-3">Find another gig</a>
 
 </main>
-
-<footer class="site-footer">
-  <div class="container">
-    <p class="display-face h4 mb-2" style="color:#f2f0eb;">Amplifi</p>
-    <p class="mb-0">Amplifi acknowledges the Traditional Custodians of the lands on which these gigs take place, and pays respect to Elders past and present.</p>
-    <p class="meta mt-4 mb-0">Front-end prototype · QUT assignment</p>
-  </div>
-</footer>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+{% endblock %}
