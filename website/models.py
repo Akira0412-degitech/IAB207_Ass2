@@ -38,21 +38,14 @@ class Event(db.Model):
     doors_time = db.Column(db.Time, nullable=True)
     end_time = db.Column(db.Time, nullable=True)
 
-    # Venue kept as plain fields on Event rather than a separate Venue table:
-    # no user story needs venues to be browsed or reused independently of an
-    # event, so normalising it out would add tables/forms/routes with no
-    # functional payoff (see design-report review).
+   
     venue_name = db.Column(db.String(120), nullable=False)
     venue_address = db.Column(db.String(200), nullable=True)
 
     ticket_price = db.Column(db.Numeric(6, 2), nullable=False)
     tickets_total = db.Column(db.Integer, nullable=False)
 
-    # Lineup: kept as a fixed set of flat fields (matches the existing
-    # create.html form: artist1/set1, artist2/set2, artist3/set3). A
-    # separate Artist/Lineup many-to-many table was considered but rejected
-    # for the same reason as Venue, and because a dynamic "add another
-    # artist" UI would normally need JavaScript, which this unit forbids.
+    
     artist_1 = db.Column(db.String(120), nullable=False)
     artist_1_time = db.Column(db.Time, nullable=True)
     artist_2 = db.Column(db.String(120), nullable=True)
@@ -64,12 +57,7 @@ class Event(db.Model):
     aoc_type = db.Column(db.String(20), nullable=False, default='none')
     aoc_group = db.Column(db.String(200), nullable=True)  # named custodians, only used when aoc_type == 'enhanced'
 
-    # Cancelled is the one status change that is a genuine user action, so it
-    # is the only part of "status" stored as a column. Open / Inactive /
-    # Sold Out are all derivable from event_date and ticket counts, so they
-    # are computed on the fly in `status` below instead of being stored
-    # (a stored value would risk going stale the moment the event date
-    # passes or a booking is made, without saving any real computation).
+    
     is_cancelled = db.Column(db.Boolean, nullable=False, default=False)
 
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
@@ -106,8 +94,7 @@ class Booking(db.Model):
     event_id = db.Column(db.Integer, db.ForeignKey('events.id'), nullable=False)
 
     quantity = db.Column(db.Integer, nullable=False)
-    # Snapshot of the per-ticket price at the moment of booking, so a later
-    # change to Event.ticket_price never rewrites the price on a past order.
+   
     price_per_ticket = db.Column(db.Numeric(6, 2), nullable=False)
     booked_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 
