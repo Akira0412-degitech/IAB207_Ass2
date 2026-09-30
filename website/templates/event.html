@@ -76,12 +76,24 @@
       </div>
       {% endif %}
 
-      <!-- Comments: US6 (reading) lands here; posting is US7 in Sprint 2. -->
+      <!-- US6: anybody can read the comments, whatever the gig's status.
+           Posting them is US7 in Sprint 2. -->
       <section aria-labelledby="comments-heading">
         <div class="rule-heading">
-          <h2 id="comments-heading">Comments</h2>
+          <h2 id="comments-heading">Comments ({{ comments|length }})</h2>
         </div>
-        <p class="meta mt-3">Comments arrive with issue #8.</p>
+
+        {% for comment in comments %}
+        <article class="comment">
+          <div class="d-flex flex-wrap justify-content-between gap-2">
+            <span class="comment-author">{{ comment.user.first_name }} {{ comment.user.surname }}</span>
+            <span class="meta">{{ comment.created_at.strftime('%d %b %Y, %I:%M %p')|lower }}</span>
+          </div>
+          <p class="mb-0 mt-1">{{ comment.body }}</p>
+        </article>
+        {% else %}
+        <p class="meta mt-3">No comments yet.</p>
+        {% endfor %}
       </section>
 
     </div>
