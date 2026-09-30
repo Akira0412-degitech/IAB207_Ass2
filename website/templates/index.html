@@ -25,43 +25,51 @@
 {% block content %}
 <main class="container">
 
-  <!-- Genre browsing.
-       US2 will turn these into links that carry a ?genre= query parameter.
-       They are inert for now - the filtering logic belongs to issue #6. -->
+  <!-- US2: genre chips are plain links carrying ?genre=, and each one also
+       carries the current search term so changing genre does not throw the
+       keyword away. No JavaScript involved. -->
   <section aria-labelledby="genres-heading">
     <div class="rule-heading d-flex flex-wrap justify-content-between align-items-baseline gap-2">
       <h2 id="genres-heading">Browse by genre</h2>
-      <span class="meta">6 categories</span>
+      <span class="meta">{{ genres|length }} categories</span>
     </div>
-    <div class="d-flex flex-wrap gap-2 mt-3" role="group" aria-label="Filter gigs by genre">
-      <input type="radio" class="btn-check" name="genre" id="g-all" checked>
-      <label class="btn genre-chip" for="g-all">All gigs</label>
 
-      <input type="radio" class="btn-check" name="genre" id="g-rock">
-      <label class="btn genre-chip" for="g-rock">Rock / Punk</label>
+    <nav class="d-flex flex-wrap gap-2 mt-3" aria-label="Filter gigs by genre">
+      <a class="btn genre-chip{% if genre == 'all' %} active{% endif %}"
+         href="{{ url_for('main.index', q=q or None) }}">All gigs</a>
+      {% for g in genres %}
+      <a class="btn genre-chip{% if genre == g %} active{% endif %}"
+         href="{{ url_for('main.index', genre=g, q=q or None) }}">{{ g }}</a>
+      {% endfor %}
+    </nav>
 
-      <input type="radio" class="btn-check" name="genre" id="g-metal">
-      <label class="btn genre-chip" for="g-metal">Metal / Heavy</label>
-
-      <input type="radio" class="btn-check" name="genre" id="g-elec">
-      <label class="btn genre-chip" for="g-elec">Electronic</label>
-
-      <input type="radio" class="btn-check" name="genre" id="g-hip">
-      <label class="btn genre-chip" for="g-hip">Hip-Hop / R&amp;B</label>
-
-      <input type="radio" class="btn-check" name="genre" id="g-jazz">
-      <label class="btn genre-chip" for="g-jazz">Jazz / Blues</label>
-
-      <input type="radio" class="btn-check" name="genre" id="g-folk">
-      <label class="btn genre-chip" for="g-folk">Folk / Acoustic</label>
-    </div>
+    <!-- US3: a plain GET form. The hidden genre field is the mirror of the
+         q=q above, so searching keeps whichever genre is selected. -->
+    <form class="row g-2 mt-3" method="get" action="{{ url_for('main.index') }}" role="search">
+      <input type="hidden" name="genre" value="{{ genre }}">
+      <div class="col-12 col-sm-8 col-md-6">
+        <label for="q" class="visually-hidden">Search gigs</label>
+        <input type="search" class="form-control" id="q" name="q" value="{{ q }}"
+               placeholder="Search by band, venue or gig title">
+      </div>
+      <div class="col-auto">
+        <button type="submit" class="btn btn-ink">Search</button>
+      </div>
+      {% if q or genre != 'all' %}
+      <div class="col-auto">
+        <a href="{{ url_for('main.index') }}" class="btn btn-outline-ink">Clear</a>
+      </div>
+      {% endif %}
+    </form>
   </section>
 
   <!-- Gig listing: every card below is generated from the database. -->
   <section aria-labelledby="whats-on-heading" id="whats-on">
     <div class="rule-heading d-flex flex-wrap justify-content-between align-items-baseline gap-2">
-      <h2 id="whats-on-heading">What's on</h2>
-      <span class="meta">{{ events|length }} gig{{ '' if events|length == 1 else 's' }}</span>
+      <h2 id="whats-on-heading">
+        {% if genre != 'all' %}{{ genre }}{% else %}What's on{% endif %}
+      </h2>
+      <span class="meta">{{ events|length }} gig{{ '' if events|length == 1 else 's' }}{% if q %} matching "{{ q }}"{% endif %}</span>
     </div>
 
     <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 g-4 mt-1">
@@ -95,10 +103,19 @@
         </a>
       </div>
       {% else %}
-      <!-- Jinja runs this branch when the loop has nothing to iterate over,
-           so an empty database shows a message rather than a blank grid. -->
+      <!-- Jinja runs this branch when the loop has nothing to iterate over.
+           US2 and US3 both require a message here rather than a blank grid. -->
       <div class="col-12">
+        {% if q or genre != 'all' %}
+        <p class="mb-2">No gigs match
+          {%- if q %} “{{ q }}”{% endif %}
+          {%- if q and genre != 'all' %} in{% endif %}
+          {%- if genre != 'all' %} {{ genre }}{% endif %}.
+        </p>
+        <a href="{{ url_for('main.index') }}" class="btn btn-outline-ink">Show all gigs</a>
+        {% else %}
         <p class="meta">No gigs are listed at the moment. Check back soon.</p>
+        {% endif %}
       </div>
       {% endfor %}
 
