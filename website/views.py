@@ -61,9 +61,11 @@ def index():
 
 @main_bp.route('/event/<int:event_id>')
 def event_detail(event_id):
-    """US5 - event details. Open to visitors, no login needed.
-    The lookup by event_id lands with issue #5."""
-    return render_template('event.html')
+    """US5 - full details for one gig. Open to visitors, no login needed.
+    get_or_404 turns an unknown id into a clean 404 rather than a crash,
+    which US19's error handling will style later."""
+    event = db.get_or_404(Event, event_id)
+    return render_template('event.html', event=event)
 
 
 @main_bp.route('/create', methods=['GET', 'POST'])

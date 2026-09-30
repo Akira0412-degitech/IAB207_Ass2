@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Halcyon Drift at The Zoo — Amplifi{% endblock %}
+{% block title %}{{ event.title }} at {{ event.venue_name }} — Amplifi{% endblock %}
 
 {% block content %}
 <main class="container py-4">
@@ -8,8 +8,8 @@
   <nav aria-label="breadcrumb">
     <ol class="breadcrumb meta">
       <li class="breadcrumb-item"><a href="{{ url_for('main.index') }}">Gigs</a></li>
-      <li class="breadcrumb-item"><a href="{{ url_for('main.index') }}#whats-on">Rock / Punk</a></li>
-      <li class="breadcrumb-item active" aria-current="page">Halcyon Drift</li>
+      <li class="breadcrumb-item"><a href="{{ url_for('main.index', genre=event.genre) }}">{{ event.genre }}</a></li>
+      <li class="breadcrumb-item active" aria-current="page">{{ event.title }}</li>
     </ol>
   </nav>
 
@@ -18,170 +18,97 @@
     <!-- Left: poster + detail -->
     <div class="col-lg-8">
 
-      <span class="status status-open">Open</span>
-      <h1 class="mt-2" style="font-size:clamp(2.2rem,6vw,3.5rem);">Halcyon Drift</h1>
-      <p class="meta">Rock / Punk · Saturday 12 September 2026 · The Zoo, Fortitude Valley</p>
+      <span class="status status-{{ event.status|lower|replace(' ', '') }}">{{ event.status }}</span>
+      <h1 class="mt-2" style="font-size:clamp(2.2rem,6vw,3.5rem);">{{ event.title }}</h1>
+      <p class="meta">{{ event.genre }} · {{ event.event_date.strftime('%A %d %B %Y') }} · {{ event.venue_name }}</p>
 
-      <img src="{{ url_for('static', filename='img/gig-halcyon.jpg') }}" alt="Gig poster for Halcyon Drift at The Zoo, Fortitude Valley" class="detail-poster my-3">
+      <img src="{{ url_for('static', filename='img/' ~ event.image_filename) }}"
+           alt="Gig poster for {{ event.title }} at {{ event.venue_name }}"
+           class="detail-poster my-3">
 
       <h2 class="h4 mt-4">About this gig</h2>
-      <p>Halcyon Drift have spent two years playing to eighty people in rooms with bad ceilings, and this is the last show before they leave for the east coast run. The new material is louder and considerably less polite than the EP.</p>
-      <p>Paper Ferns open with a short set of their reverb-drenched instrumentals, and Slow Tourist play second. Doors at 7:30pm, first act on at 8:00pm sharp — the venue has a hard curfew and the headline set will not be pushed back.</p>
+      <p>{{ event.description }}</p>
 
       <h2 class="h4 mt-4">Lineup</h2>
       <div class="mb-3">
-        <div class="lineup-row d-flex flex-wrap justify-content-between align-items-center gap-2">
-          <span><strong>Halcyon Drift</strong></span>
-          <span><span class="lineup-role">Headline</span> <span class="meta ms-2">9:15pm</span></span>
-        </div>
-        <div class="lineup-row d-flex flex-wrap justify-content-between align-items-center gap-2">
-          <span><strong>Slow Tourist</strong></span>
-          <span><span class="lineup-role support">Support</span> <span class="meta ms-2">8:35pm</span></span>
-        </div>
-        <div class="lineup-row d-flex flex-wrap justify-content-between align-items-center gap-2">
-          <span><strong>Paper Ferns</strong></span>
-          <span><span class="lineup-role support">Support</span> <span class="meta ms-2">8:00pm</span></span>
-        </div>
+        {% for name, set_time, role in [
+             (event.artist_1, event.artist_1_time, 'Headline'),
+             (event.artist_2, event.artist_2_time, 'Support'),
+             (event.artist_3, event.artist_3_time, 'Support')
+           ] %}
+          {% if name %}
+          <div class="lineup-row d-flex flex-wrap justify-content-between align-items-center gap-2">
+            <span><strong>{{ name }}</strong></span>
+            <span>
+              <span class="lineup-role{% if role == 'Support' %} support{% endif %}">{{ role }}</span>
+              {% if set_time %}<span class="meta ms-2">{{ set_time.strftime('%I:%M %p')|lower }}</span>{% endif %}
+            </span>
+          </div>
+          {% endif %}
+        {% endfor %}
       </div>
 
       <h2 class="h4 mt-4">Details</h2>
       <ul class="fact-list mb-4">
-        <li><span class="fact-key">Date</span><span class="fact-val">Saturday 12 September 2026</span></li>
-        <li><span class="fact-key">Doors open</span><span class="fact-val">7:30 pm</span></li>
-        <li><span class="fact-key">Finishes</span><span class="fact-val">11:00 pm</span></li>
-        <li><span class="fact-key">Venue</span><span class="fact-val">The Zoo, 711 Ann Street, Fortitude Valley</span></li>
-        <li><span class="fact-key">Age restriction</span><span class="fact-val">18+ · photo ID required</span></li>
-        <li><span class="fact-key">Genre</span><span class="fact-val">Rock / Punk</span></li>
-        <li><span class="fact-key">Tickets remaining</span><span class="fact-val">34 of 220</span></li>
+        <li><span class="fact-key">Date</span><span class="fact-val">{{ event.event_date.strftime('%A %d %B %Y') }}</span></li>
+        {% if event.doors_time %}
+        <li><span class="fact-key">Doors open</span><span class="fact-val">{{ event.doors_time.strftime('%I:%M %p')|lower }}</span></li>
+        {% endif %}
+        {% if event.end_time %}
+        <li><span class="fact-key">Finishes</span><span class="fact-val">{{ event.end_time.strftime('%I:%M %p')|lower }}</span></li>
+        {% endif %}
+        <li><span class="fact-key">Venue</span><span class="fact-val">{{ event.venue_name }}{% if event.venue_address %}, {{ event.venue_address }}{% endif %}</span></li>
+        <li><span class="fact-key">Age restriction</span><span class="fact-val">{{ event.age_restriction }}</span></li>
+        <li><span class="fact-key">Genre</span><span class="fact-val">{{ event.genre }}</span></li>
+        <li><span class="fact-key">Tickets remaining</span><span class="fact-val">{{ event.tickets_remaining }} of {{ event.tickets_total }}</span></li>
       </ul>
 
+      <!-- US5: the Acknowledgement is only shown when the creator chose one. -->
+      {% if event.aoc_type == 'enhanced' and event.aoc_group %}
       <div class="aoc mb-4">
         <p class="meta mb-2">Acknowledgement of Country</p>
-        <p class="mb-0">We acknowledge the Turrbal and Yuggera peoples as the Traditional Custodians of the land on which this event takes place, and pay our respects to Elders past and present. This always was, and always will be, Aboriginal land.</p>
+        <p class="mb-0">We acknowledge the {{ event.aoc_group }} as the Traditional Custodians of the land on which this event takes place, and pay our respects to Elders past and present. This always was, and always will be, Aboriginal land.</p>
       </div>
+      {% elif event.aoc_type == 'generic' %}
+      <div class="aoc mb-4">
+        <p class="meta mb-2">Acknowledgement of Country</p>
+        <p class="mb-0">We acknowledge the Traditional Custodians of the land on which this event takes place, and pay our respects to Elders past and present. This always was, and always will be, Aboriginal land.</p>
+      </div>
+      {% endif %}
 
-      <!-- Comments -->
+      <!-- Comments: US6 (reading) lands here; posting is US7 in Sprint 2. -->
       <section aria-labelledby="comments-heading">
         <div class="rule-heading">
-          <h2 id="comments-heading">Comments (3)</h2>
+          <h2 id="comments-heading">Comments</h2>
         </div>
-
-        <form class="my-4" novalidate>
-          <label for="comment-body" class="form-label">Add a comment</label>
-          <textarea class="form-control" id="comment-body" rows="3" placeholder="Ask about set times, parking, or the support acts"></textarea>
-          <div class="form-text mb-3">You need to be logged in to post. Your name and the date will be shown.</div>
-          <button type="submit" class="btn btn-ink">Post comment</button>
-        </form>
-
-        <article class="comment">
-          <div class="d-flex flex-wrap justify-content-between gap-2">
-            <span class="comment-author">Marta Ilić</span>
-            <span class="meta">28 Aug 2026, 9:14 pm</span>
-          </div>
-          <p class="mb-0 mt-1">Saw them at Crowbar in June and the new songs were already excellent. Get there early, Paper Ferns are worth the trip on their own.</p>
-        </article>
-
-        <article class="comment">
-          <div class="d-flex flex-wrap justify-content-between gap-2">
-            <span class="comment-author">Dev Ramanathan</span>
-            <span class="meta">27 Aug 2026, 4:02 pm</span>
-          </div>
-          <p class="mb-0 mt-1">Is there parking nearby or is it worth taking the train to Fortitude Valley station?</p>
-        </article>
-
-        <article class="comment">
-          <div class="d-flex flex-wrap justify-content-between gap-2">
-            <span class="comment-author">Halcyon Drift</span>
-            <span class="meta">27 Aug 2026, 5:30 pm</span>
-          </div>
-          <p class="mb-0 mt-1">Train is easier — the station is a five minute walk and street parking around Ann Street fills up by 7pm.</p>
-        </article>
+        <p class="meta mt-3">Comments arrive with issue #8.</p>
       </section>
 
     </div>
 
-    <!-- Right: booking -->
+    <!-- Right: booking. Wired up in Sprint 2 (US8). -->
     <div class="col-lg-4">
       <div class="booking-box">
         <p class="meta mb-1">General admission</p>
-        <p class="price mb-1">$28.00</p>
-        <p class="meta mb-3">34 of 220 tickets remaining</p>
+        <p class="price mb-1">${{ '%.2f'|format(event.ticket_price) }}</p>
+        <p class="meta mb-3">{{ event.tickets_remaining }} of {{ event.tickets_total }} tickets remaining</p>
 
-        <label for="qty" class="form-label">Number of tickets</label>
-        <select class="form-select mb-3" id="qty">
-          <option value="1" selected>1 ticket</option>
-          <option value="2">2 tickets</option>
-          <option value="3">3 tickets</option>
-          <option value="4">4 tickets</option>
-          <option value="5">5 tickets</option>
-          <option value="6">6 tickets</option>
-        </select>
-
-        <button type="button" class="btn btn-ink w-100" data-bs-toggle="modal" data-bs-target="#bookModal">Book tickets</button>
-        <p class="form-text mt-2 mb-0">You'll confirm before anything is charged. Maximum six tickets per order.</p>
-
-        <hr class="my-3">
-
-        <p class="meta mb-2">Too many tickets?</p>
-        <button type="button" class="btn btn-outline-ink btn-sm w-100" data-bs-toggle="modal" data-bs-target="#errorModal">Preview the "not enough tickets" message</button>
+        {% if event.status == 'Open' %}
+        <button type="button" class="btn btn-ink w-100" disabled>Book tickets</button>
+        <p class="form-text mt-2 mb-0">Booking arrives with issue #8.</p>
+        {% elif event.status == 'Sold Out' %}
+        <p class="status status-soldout d-block text-center">Sold out</p>
+        <p class="form-text mt-2 mb-0">No tickets left for this gig.</p>
+        {% elif event.status == 'Cancelled' %}
+        <p class="status status-cancelled d-block text-center">Cancelled</p>
+        <p class="form-text mt-2 mb-0">This gig was cancelled and refunds have been issued.</p>
+        {% else %}
+        <p class="status status-inactive d-block text-center">Event finished</p>
+        <p class="form-text mt-2 mb-0">This gig has already taken place.</p>
+        {% endif %}
       </div>
     </div>
 
   </div>
 </main>
-
-<!-- Booking modal -->
-<div class="modal fade" id="bookModal" tabindex="-1" aria-labelledby="bookModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2 class="modal-title h5" id="bookModalLabel">Confirm your order</h2>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <p class="mb-3"><strong>Halcyon Drift</strong><br>
-        <span class="meta">Sat 12 Sep 2026 · The Zoo, Fortitude Valley</span></p>
-
-        <label for="modal-qty" class="form-label">Tickets</label>
-        <input type="number" class="form-control mb-3" id="modal-qty" value="2" min="1" max="6">
-
-        <ul class="fact-list mb-3">
-          <li><span class="fact-key">Ticket price</span><span class="fact-val">$28.00</span></li>
-          <li><span class="fact-key">Quantity</span><span class="fact-val">2</span></li>
-          <li><span class="fact-key">Order total</span><span class="fact-val">$56.00</span></li>
-        </ul>
-
-        <div class="alert alert-success mb-0" role="status" style="border-radius:0;border:2px solid #0f6e2f;">
-          <p class="mb-1"><strong>Order confirmed</strong></p>
-          <p class="mb-0">Order ID <span class="order-id">AMP-2026-004417</span> — a confirmation has been sent to your email. This gig now shows in My tickets.</p>
-        </div>
-      </div>
-      <div class="modal-footer border-0">
-        <button type="button" class="btn btn-outline-ink" data-bs-dismiss="modal">Keep browsing</button>
-        <a href="{{ url_for('main.bookings') }}" class="btn btn-ink">View my tickets</a>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- Insufficient tickets modal -->
-<div class="modal fade" id="errorModal" tabindex="-1" aria-labelledby="errorModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2 class="modal-title h5" id="errorModalLabel">Order can't be placed</h2>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <div class="alert alert-danger mb-0" role="alert" style="border-radius:0;border:2px solid #a3262d;">
-          <p class="mb-1"><strong>Only 34 tickets are left</strong></p>
-          <p class="mb-0">You asked for 40. Reduce your order to 34 or fewer and try again.</p>
-        </div>
-      </div>
-      <div class="modal-footer border-0">
-        <button type="button" class="btn btn-ink" data-bs-dismiss="modal">Change quantity</button>
-      </div>
-    </div>
-  </div>
-</div>
 {% endblock %}
