@@ -9,9 +9,13 @@
       <div class="col-lg-9">
         <p class="meta mb-2" style="color:#ff3d7f;">Brisbane · Gold Coast · Sunshine Coast</p>
         <h1>Small rooms.<br>Loud nights.<br><span class="accent">Every week.</span></h1>
-        <p class="lede mt-3 mb-4">Amplifi lists gigs from the independent circuit — the 150-capacity rooms where touring bands play before anyone has heard of them. Browse what's on, grab a ticket, argue in the comments.</p>
-        <a href="#whats-on" class="btn btn-ink">Browse gigs</a>
+        <p class="lede mt-3 mb-4">Amplifi is where South East Queensland's independent circuit lists its gigs. Discover what's on, book a ticket, comment on the lineup — or list your own show.</p>
+        <a href="#whats-on" class="btn btn-outline-ink" style="color:#f2f0eb;border-color:#f2f0eb;">Browse gigs</a>
+        {% if current_user.is_authenticated %}
         <a href="{{ url_for('main.create_event') }}" class="btn btn-outline-ink ms-2" style="color:#f2f0eb;border-color:#f2f0eb;">List your gig</a>
+        {% else %}
+        <a href="{{ url_for('auth.register') }}" class="btn btn-outline-ink ms-2" style="color:#f2f0eb;border-color:#f2f0eb;">Create an account</a>
+        {% endif %}
       </div>
     </div>
   </div>
@@ -21,7 +25,9 @@
 {% block content %}
 <main class="container">
 
-  <!-- Genre browsing -->
+  <!-- Genre browsing.
+       US2 will turn these into links that carry a ?genre= query parameter.
+       They are inert for now - the filtering logic belongs to issue #6. -->
   <section aria-labelledby="genres-heading">
     <div class="rule-heading d-flex flex-wrap justify-content-between align-items-baseline gap-2">
       <h2 id="genres-heading">Browse by genre</h2>
@@ -51,110 +57,50 @@
     </div>
   </section>
 
-  <!-- Gig listing -->
-  <section aria-labelledby="whats-on" id="whats-on">
+  <!-- Gig listing: every card below is generated from the database. -->
+  <section aria-labelledby="whats-on-heading" id="whats-on">
     <div class="rule-heading d-flex flex-wrap justify-content-between align-items-baseline gap-2">
       <h2 id="whats-on-heading">What's on</h2>
-      <span class="meta">Showing 6 of 42</span>
+      <span class="meta">{{ events|length }} gig{{ '' if events|length == 1 else 's' }}</span>
     </div>
 
     <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 g-4 mt-1">
 
+      {% for event in events %}
       <div class="col">
-        <a class="card-link-plain" href="{{ url_for('main.event_detail', event_id=1) }}">
-          <article class="card gig-card">
-            <img src="{{ url_for('static', filename='img/gig-halcyon.jpg') }}" class="card-img-top" alt="Poster for Halcyon Drift at The Zoo">
+        <a class="card-link-plain" href="{{ url_for('main.event_detail', event_id=event.id) }}">
+          <article class="card gig-card{% if event.status == 'Cancelled' %} is-cancelled{% elif event.status == 'Inactive' %} is-past{% endif %}">
+            <img src="{{ url_for('static', filename='img/' ~ event.image_filename) }}"
+                 class="card-img-top"
+                 alt="Poster for {{ event.title }} at {{ event.venue_name }}">
             <div class="card-body">
-              <span class="status status-open">Open</span>
-              <h3 class="card-title mt-2">Halcyon Drift</h3>
-              <p class="meta mb-2">Rock / Punk · 18+</p>
-              <p class="mb-2">With Paper Ferns and Slow Tourist. Doors 7:30pm.</p>
-              <p class="meta mb-0">Sat 12 Sep · The Zoo, Fortitude Valley</p>
-              <p class="meta mb-0">$28 · 34 tickets left</p>
+              <!-- 'Sold Out' becomes status-soldout, matching the CSS classes. -->
+              <span class="status status-{{ event.status|lower|replace(' ', '') }}">{{ event.status }}</span>
+              <h3 class="card-title mt-2">{{ event.title }}</h3>
+              <p class="meta mb-2">{{ event.genre }} · {{ event.age_restriction }}</p>
+              <p class="mb-2">{{ event.description[:90] }}{% if event.description|length > 90 %}…{% endif %}</p>
+              <p class="meta mb-0">{{ event.event_date.strftime('%a %d %b') }} · {{ event.venue_name }}</p>
+              <p class="meta mb-0">
+                ${{ '%.2f'|format(event.ticket_price) }}
+                {% if event.status == 'Cancelled' %}
+                · Refunds issued
+                {% elif event.status == 'Inactive' %}
+                · Event finished
+                {% else %}
+                · {{ event.tickets_remaining }} ticket{{ '' if event.tickets_remaining == 1 else 's' }} left
+                {% endif %}
+              </p>
             </div>
           </article>
         </a>
       </div>
-
-      <div class="col">
-        <a class="card-link-plain" href="{{ url_for('main.event_detail', event_id=2) }}">
-          <article class="card gig-card">
-            <img src="{{ url_for('static', filename='img/gig-quarry.jpg') }}" class="card-img-top" alt="Poster for Quarry Belt at Crowbar">
-            <div class="card-body">
-              <span class="status status-soldout">Sold out</span>
-              <h3 class="card-title mt-2">Quarry Belt</h3>
-              <p class="meta mb-2">Metal / Heavy · 18+</p>
-              <p class="mb-2">Album launch with Ironbark and Hollow Coast.</p>
-              <p class="meta mb-0">Fri 18 Sep · Crowbar, Brisbane</p>
-              <p class="meta mb-0">$35 · 0 tickets left</p>
-            </div>
-          </article>
-        </a>
+      {% else %}
+      <!-- Jinja runs this branch when the loop has nothing to iterate over,
+           so an empty database shows a message rather than a blank grid. -->
+      <div class="col-12">
+        <p class="meta">No gigs are listed at the moment. Check back soon.</p>
       </div>
-
-      <div class="col">
-        <a class="card-link-plain" href="{{ url_for('main.event_detail', event_id=3) }}">
-          <article class="card gig-card">
-            <img src="{{ url_for('static', filename='img/gig-lowtide.jpg') }}" class="card-img-top" alt="Poster for Low Tide Club at Mo's Desert Clubhouse">
-            <div class="card-body">
-              <span class="status status-open">Open</span>
-              <h3 class="card-title mt-2">Low Tide Club</h3>
-              <p class="meta mb-2">Electronic · All ages</p>
-              <p class="mb-2">Live modular set plus two support DJs.</p>
-              <p class="meta mb-0">Sat 26 Sep · Mo's Desert Clubhouse, Burleigh</p>
-              <p class="meta mb-0">$22 · 118 tickets left</p>
-            </div>
-          </article>
-        </a>
-      </div>
-
-      <div class="col">
-        <a class="card-link-plain" href="{{ url_for('main.event_detail', event_id=4) }}">
-          <article class="card gig-card is-cancelled">
-            <img src="{{ url_for('static', filename='img/gig-verandah.jpg') }}" class="card-img-top" alt="Poster for Verandah Saints at The Triffid">
-            <div class="card-body">
-              <span class="status status-cancelled">Cancelled</span>
-              <h3 class="card-title mt-2">Verandah Saints</h3>
-              <p class="meta mb-2">Folk / Acoustic · 18+</p>
-              <p class="mb-2">Cancelled by the promoter. Refunds processed automatically.</p>
-              <p class="meta mb-0">Thu 2 Oct · The Triffid, Newstead</p>
-              <p class="meta mb-0">$30 · Refunds issued</p>
-            </div>
-          </article>
-        </a>
-      </div>
-
-      <div class="col">
-        <a class="card-link-plain" href="{{ url_for('main.event_detail', event_id=5) }}">
-          <article class="card gig-card is-past">
-            <img src="{{ url_for('static', filename='img/gig-pilotlight.jpg') }}" class="card-img-top" alt="Poster for Pilot Light at The Bearded Lady">
-            <div class="card-body">
-              <span class="status status-inactive">Inactive</span>
-              <h3 class="card-title mt-2">Pilot Light</h3>
-              <p class="meta mb-2">Hip-Hop / R&amp;B · 18+</p>
-              <p class="mb-2">This gig has already happened. Comments stay open.</p>
-              <p class="meta mb-0">Sat 9 Aug · The Bearded Lady, West End</p>
-              <p class="meta mb-0">$25 · Event finished</p>
-            </div>
-          </article>
-        </a>
-      </div>
-
-      <div class="col">
-        <a class="card-link-plain" href="{{ url_for('main.event_detail', event_id=6) }}">
-          <article class="card gig-card">
-            <img src="{{ url_for('static', filename='img/gig-fernway.jpg') }}" class="card-img-top" alt="Poster for Fernway at Miami Marketta">
-            <div class="card-body">
-              <span class="status status-open">Open</span>
-              <h3 class="card-title mt-2">Fernway</h3>
-              <p class="meta mb-2">Jazz / Blues · All ages</p>
-              <p class="mb-2">Six-piece, two sets, no support.</p>
-              <p class="meta mb-0">Sun 11 Oct · Miami Marketta, Gold Coast</p>
-              <p class="meta mb-0">$18 · 61 tickets left</p>
-            </div>
-          </article>
-        </a>
-      </div>
+      {% endfor %}
 
     </div>
   </section>
