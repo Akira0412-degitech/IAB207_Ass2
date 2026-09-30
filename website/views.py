@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template
+from flask import Blueprint, render_template, request
 from flask_login import login_required
 
 from .models import Event
@@ -6,15 +6,57 @@ from . import db
 
 main_bp = Blueprint('main', __name__)
 
+# The six categories offered on the landing page. Kept here rather than in
+# the template so the route and the chips can never drift apart.
+GENRES = [
+    'Rock / Punk',
+    'Metal / Heavy',
+    'Electronic',
+    'Hip-Hop / R&B',
+    'Jazz / Blues',
+    'Folk / Acoustic',
+]
+
 
 @main_bp.route('/')
 def index():
-    """US1 - landing page. Lists every gig held in the database, soonest
-    first, and is open to visitors who are not logged in."""
-    events = db.session.scalars(
-        db.select(Event).order_by(Event.event_date)
-    ).all()
-    return render_template('index.html', events=events)
+    """US1, US2, US3 - landing page.
+
+    One route handles all three stories: it lists every gig, and narrows
+    that list by genre and/or keyword when those query parameters are
+    present. Keeping them together is what lets the two filters combine,
+    e.g. /?genre=Electronic&q=burleigh
+    """
+    genre = request.args.get('genre', 'all')
+    q = request.args.get('q', '').strip()
+
+    query = db.select(Event)
+
+    # US2 - narrow to one genre. 'all' means no genre filter at all.
+    if genre != 'all':
+        query = query.where(Event.genre == genre)
+
+    # US3 - case-insensitive keyword match. The lineup is stored as three
+    # flat columns rather than a related table, so each is searched in turn.
+    if q:
+        like = '%{}%'.format(q)
+        query = query.where(db.or_(
+            Event.title.ilike(like),
+            Event.venue_name.ilike(like),
+            Event.artist_1.ilike(like),
+            Event.artist_2.ilike(like),
+            Event.artist_3.ilike(like),
+        ))
+
+    events = db.session.scalars(query.order_by(Event.event_date)).all()
+
+    return render_template(
+        'index.html',
+        events=events,
+        genres=GENRES,
+        genre=genre,
+        q=q,
+    )
 
 
 @main_bp.route('/event/<int:event_id>')
