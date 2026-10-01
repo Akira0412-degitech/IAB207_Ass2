@@ -144,6 +144,11 @@ button:focus-visible,
   color: var(--paper);
 }
 
+.genre-chip.active {
+  background: var(--ink);
+  color: var(--paper);
+}
+
 /* ---------- Gig cards ---------- */
 
 .gig-card {
