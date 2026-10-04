@@ -42,4 +42,8 @@ def create_app():
     from . import auth
     app.register_blueprint(auth.auth_bp)
 
+    # create any missing tables so a fresh clone runs without seed_db.py
+    with app.app_context():
+        db.create_all()
+
     return app
