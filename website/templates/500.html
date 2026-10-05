@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{# US19 - custom 500 page. Extends base.html so the navbar and footer
+   are always present, matching AC3. IMPORTANT: this template must never
+   print the exception, request internals, or any stack trace. The handler
+   in __init__.py ensures db.session is rolled back before this renders. #}
+
+{% block title %}Something went wrong — Amplifi{% endblock %}
+
+{% block content %}
+<main class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6 text-center">
+
+      {# Large decorative code — aria-hidden so screen readers skip the
+         number and go straight to the heading below. #}
+      <p class="err-code" aria-hidden="true">500</p>
+
+      <h1 style="font-size:clamp(2rem,7vw,3.5rem);">
+        Something broke on stage.
+      </h1>
+
+      {# .meta matches the IBM Plex Mono label style used across the site. #}
+      <p class="meta mb-3">
+        Server error — this one&rsquo;s on us
+      </p>
+
+      <p class="mb-5">
+        There&rsquo;s a technical problem on our end and it&rsquo;s not your
+        fault. We&rsquo;re looking into it. Try again in a moment, or head
+        back to the listings — the music hasn&rsquo;t stopped.
+      </p>
+
+      {# Single CTA: just get them back to safety. No secondary link that
+         might also be broken if the database is the cause of the error. #}
+      <div class="d-flex flex-wrap gap-3 justify-content-center">
+        <a href="{{ url_for('main.index') }}" class="btn btn-ink">
+          Back to all gigs
+        </a>
+      </div>
+
+    </div>
+  </div>
+</main>
+{% endblock %}
