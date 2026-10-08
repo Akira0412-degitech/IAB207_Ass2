@@ -459,3 +459,17 @@ fieldset.panel legend {
   .gig-card { transition: none; }
   .gig-card:hover { transform: none; }
 }
+
+/* ---------- Error pages (US19) ---------- */
+
+/* Large decorative error code displayed above the heading on 404/500 pages.
+   Uses the Anton display face and riso-pink so it reads as a visual signal
+   rather than body text. aria-hidden in the template keeps this decorative. */
+.err-code {
+  font-family: "Anton", Impact, sans-serif;
+  font-size: clamp(5rem, 22vw, 11rem);
+  line-height: 1;
+  color: var(--riso-pink);
+  margin-bottom: 0.25rem;
+  letter-spacing: 0.02em;
+}
