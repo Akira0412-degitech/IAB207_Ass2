@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{# US19 - custom 404 page. Extends base.html so the navbar and footer
+   are always present, matching AC3. The status code is set in the handler
+   in __init__.py, not here. #}
+
+{% block title %}Page not found — Amplifi{% endblock %}
+
+{% block content %}
+<main class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6 text-center">
+
+      {# Large decorative code — aria-hidden so screen readers skip the
+         number and go straight to the heading below. #}
+      <p class="err-code" aria-hidden="true">404</p>
+
+      <h1 style="font-size:clamp(2rem,7vw,3.5rem);">
+        Looks like this gig has moved.
+      </h1>
+
+      {# .meta matches the IBM Plex Mono label style used across the site. #}
+      <p class="meta mb-3">
+        Page not found
+      </p>
+
+      <p class="mb-5">
+        The page or gig you&rsquo;re after doesn&rsquo;t exist here, or the
+        link might be out of date. Head back to the listings — there&rsquo;s
+        always something worth turning up for.
+      </p>
+
+      {# Primary action: return to landing page (AC1). Secondary: jump
+         straight to the genre filter so they can keep browsing. #}
+      <div class="d-flex flex-wrap gap-3 justify-content-center">
+        <a href="{{ url_for('main.index') }}" class="btn btn-ink">
+          Back to all gigs
+        </a>
+        <a href="{{ url_for('main.index') }}#whats-on" class="btn btn-outline-ink">
+          Browse by genre
+        </a>
+      </div>
+
+    </div>
+  </div>
+</main>
+{% endblock %}
