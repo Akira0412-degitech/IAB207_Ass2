@@ -93,3 +93,9 @@ def create_event():
 def bookings():
     """US11 - a user's own booking history, so it requires a session."""
     return render_template('bookings.html')
+
+
+@main_bp.route('/aoc')
+def aoc():
+    """US18 - Acknowledgement of Country page. Static content, open to all visitors."""
+    return render_template('aoc.html')
