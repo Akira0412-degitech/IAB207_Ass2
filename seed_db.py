@@ -66,7 +66,8 @@ def seed():
         # ------------------------------------------------------------------
         def make_event(title, description, image, genre, age, days_from_now,
                        venue, address, price, total, acts,
-                       aoc_type='generic', aoc_group=None, cancelled=False):
+                       aoc_type='generic', aoc_group=None, aoc_statement=None,
+                       cancelled=False):
             """acts is a list of (name, time) tuples, headliner first."""
             acts = acts + [(None, None)] * (3 - len(acts))
             return Event(
@@ -88,6 +89,7 @@ def seed():
                 artist_3=acts[2][0], artist_3_time=acts[2][1],
                 aoc_type=aoc_type,
                 aoc_group=aoc_group,
+                aoc_statement=aoc_statement,
                 is_cancelled=cancelled,
                 created_at=datetime.utcnow(),
             )
@@ -104,6 +106,13 @@ def seed():
              ('Slow Tourist', time(20, 35)),
              ('Paper Ferns', time(20, 0))],
             aoc_type='enhanced', aoc_group='Turrbal and Yuggera peoples',
+            aoc_statement=(
+                "We acknowledge the Turrbal and Yuggera peoples as the "
+                "Traditional Custodians of the land on which The Zoo, "
+                "Fortitude Valley stands, and pay our respects to Elders "
+                "past, present and emerging. This gig takes place on "
+                "Country that was never ceded."
+            ),
         )
 
         quarry = make_event(

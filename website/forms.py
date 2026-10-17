@@ -1,5 +1,6 @@
 from flask_wtf import FlaskForm
-from wtforms.fields import SubmitField, StringField, PasswordField
+from wtforms.fields import (SubmitField, StringField, PasswordField,
+                            RadioField, TextAreaField)
 from wtforms.validators import InputRequired, Email, EqualTo, Length, Regexp
 from wtforms import ValidationError
  
@@ -69,3 +70,43 @@ class RegisterForm(FlaskForm):
         )
         if existing is not None:
             raise ValidationError('That email address is already registered')
+
+
+class EventForm(FlaskForm):
+    """US13 - Acknowledgement of Country section of the gig listing form."""
+
+    aoc_type = RadioField("Acknowledgement of Country", choices=[
+        ('none', 'No Acknowledgement of Country'),
+        ('generic', 'Generic'),
+        ('enhanced', 'Enhanced'),
+    ], default='generic', validators=[
+        InputRequired('Choose how your listing acknowledges Country'),
+    ])
+    # US13 - no Optional() on these two: it would stop the chain on an empty
+    # value and skip the enhanced-only checks below.
+    aoc_group = StringField("Traditional Custodians", validators=[
+        Length(max=200),
+    ])
+    aoc_statement = TextAreaField("Your Acknowledgement of Country")
+    # TODO(#14): add remaining event fields (title, description, genre, venue, tickets, lineup, image, etc.) and the full creation logic.
+
+    def validate_aoc_group(self, field):
+        """US13 - an enhanced Acknowledgement is meaningless without a named group."""
+        if self.aoc_type.data == 'enhanced' and not (field.data or '').strip():
+            raise ValidationError('Name the Traditional Custodians of the land your '
+                                  'venue is on, or choose the generic option')
+
+    def validate_aoc_statement(self, field):
+        """US13 - block tokenistic wording: the statement must name the
+        custodians entered above, not be boilerplate that fits any venue."""
+        if self.aoc_type.data != 'enhanced':
+            return
+        statement = (field.data or '').strip()
+        if not statement:
+            raise ValidationError('Write your Acknowledgement of Country statement')
+        group = (self.aoc_group.data or '').strip().lower()
+        # An empty group is already reported by validate_aoc_group.
+        if group and group not in statement.lower():
+            raise ValidationError('Name the Traditional Custodians you entered '
+                                  'above in your statement')
+        # TODO(#14): also require the venue name/suburb once those fields exist
