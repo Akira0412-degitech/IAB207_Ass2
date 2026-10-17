@@ -63,11 +63,12 @@
         <li><span class="fact-key">Tickets remaining</span><span class="fact-val">{{ event.tickets_remaining }} of {{ event.tickets_total }}</span></li>
       </ul>
 
-      <!-- US5: the Acknowledgement is only shown when the creator chose one. -->
-      {% if event.aoc_type == 'enhanced' and event.aoc_group %}
+      <!-- US5: the Acknowledgement is only shown when the creator chose one.
+           US13: an enhanced one is the creator's own statement, shown as written. -->
+      {% if event.aoc_type == 'enhanced' and event.aoc_statement %}
       <div class="aoc mb-4">
         <p class="meta mb-2">Acknowledgement of Country</p>
-        <p class="mb-0">We acknowledge the {{ event.aoc_group }} as the Traditional Custodians of the land on which this event takes place, and pay our respects to Elders past and present. This always was, and always will be, Aboriginal land.</p>
+        <p class="mb-0">{{ event.aoc_statement }}</p>
       </div>
       {% elif event.aoc_type == 'generic' %}
       <div class="aoc mb-4">

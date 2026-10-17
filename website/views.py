@@ -2,6 +2,7 @@ from flask import Blueprint, render_template, request
 from flask_login import login_required
 
 from .models import Event, Comment
+from .forms import EventForm
 from . import db
 
 main_bp = Blueprint('main', __name__)
@@ -79,13 +80,15 @@ def event_detail(event_id):
     return render_template('event.html', event=event, comments=comments)
 
 
-@main_bp.route('/create', methods=['GET', 'POST'])
+@main_bp.route('/create', methods=['GET'])
 @login_required
 def create_event():
     """US12 - only a signed-in user may list a gig. @login_required sends
     anonymous visitors to auth.login with ?next=/create so they come back
     here afterwards."""
-    return render_template('create.html')
+    # TODO(#14): accept POST - validate the full EventForm and save the Event (incl. aoc_statement).
+    form = EventForm()
+    return render_template('create.html', form=form)
 
 
 @main_bp.route('/bookings')

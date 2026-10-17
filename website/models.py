@@ -56,6 +56,8 @@ class Event(db.Model):
     # Acknowledgement of Country: 'none' / 'generic' / 'enhanced'
     aoc_type = db.Column(db.String(20), nullable=False, default='none')
     aoc_group = db.Column(db.String(200), nullable=True)  # named custodians, only used when aoc_type == 'enhanced'
+    # US13 - the creator writes their own statement so it can name this venue, not a template.
+    aoc_statement = db.Column(db.Text, nullable=True)
 
     
     is_cancelled = db.Column(db.Boolean, nullable=False, default=False)

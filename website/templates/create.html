@@ -155,33 +155,64 @@
 
           <p class="mb-3">Choose how your listing acknowledges the Traditional Custodians of the land the gig is held on.</p>
 
+          {% set aoc_hints = {
+            'none': 'Nothing is shown on your listing.',
+            'generic': 'A general statement that does not name a specific group.',
+            'enhanced': 'Names the Traditional Custodians of the land your venue sits on.',
+          } %}
+          {% for option in form.aoc_type %}
           <div class="form-check mb-3">
-            <input class="form-check-input" type="radio" name="aoc" id="aoc-none" value="none">
-            <label class="form-check-label" for="aoc-none">
-              <strong>No Acknowledgement of Country</strong>
-              <span class="d-block form-text">Nothing is shown on your listing.</span>
+            {{ option(class="form-check-input") }}
+            <label class="form-check-label" for="{{ option.id }}">
+              <strong>{{ option.label.text }}</strong>
+              <span class="d-block form-text">{{ aoc_hints[option.data] }}</span>
             </label>
           </div>
+          {% endfor %}
+          {% for error in form.aoc_type.errors %}
+          <div class="invalid-feedback d-block">{{ error }}</div>
+          {% endfor %}
 
-          <div class="form-check mb-3">
-            <input class="form-check-input" type="radio" name="aoc" id="aoc-generic" value="generic" checked>
-            <label class="form-check-label" for="aoc-generic">
-              <strong>Generic</strong>
-              <span class="d-block form-text">A general statement that does not name a specific group.</span>
-            </label>
-          </div>
+          <!-- US13: no JavaScript, so the enhanced guidance sits in a native
+               <details>. It opens itself when the form comes back with
+               'enhanced' selected, e.g. after a failed validation. -->
+          <details class="mt-2" {% if form.aoc_type.data == 'enhanced' %}open{% endif %}>
+            <summary><strong>Writing an enhanced Acknowledgement</strong></summary>
 
-          <div class="form-check mb-3">
-            <input class="form-check-input" type="radio" name="aoc" id="aoc-enhanced" value="enhanced">
-            <label class="form-check-label" for="aoc-enhanced">
-              <strong>Enhanced</strong>
-              <span class="d-block form-text">Names the Traditional Custodians of the land your venue sits on.</span>
-            </label>
-          </div>
+            <div class="mt-3 mb-3">
+              {{ form.aoc_group.label(class="form-label") }}
+              {{ form.aoc_group(class="form-control" + (" is-invalid" if form.aoc_group.errors else ""), placeholder="Turrbal and Yuggera peoples") }}
+              {% for error in form.aoc_group.errors %}
+              <div class="invalid-feedback">{{ error }}</div>
+              {% endfor %}
+              <div class="form-text">Check with your local Land Council if you're unsure. Use the generic option rather than guessing.</div>
+            </div>
 
-          <label for="aoc-group" class="form-label">Traditional Custodians (enhanced only)</label>
-          <input type="text" class="form-control" id="aoc-group" name="aoc-group" placeholder="Turrbal and Yuggera peoples">
-          <div class="form-text">Check with your local Land Council if you're unsure. Use the generic option rather than guessing.</div>
+            <div class="mb-3">
+              {{ form.aoc_statement.label(class="form-label") }}
+              {{ form.aoc_statement(class="form-control" + (" is-invalid" if form.aoc_statement.errors else ""), rows=4, placeholder="We acknowledge the Turrbal and Yuggera peoples as the Traditional Custodians of the land on which The Zoo, Fortitude Valley stands...") }}
+              {% for error in form.aoc_statement.errors %}
+              <div class="invalid-feedback">{{ error }}</div>
+              {% endfor %}
+              <div class="form-text">Write it in your own words. It must name the Traditional Custodians you entered above, and is shown on your listing exactly as written.</div>
+            </div>
+
+            <p class="mb-1"><strong>Find out whose Country your venue is on</strong></p>
+            <ul>
+              <li><a href="https://aiatsis.gov.au/explore/map-indigenous-australia" target="_blank" rel="noopener noreferrer">AIATSIS Map of Indigenous Australia</a></li>
+              <li><a href="https://aiatsis.gov.au/whose-country" target="_blank" rel="noopener noreferrer">AIATSIS: Whose Country am I on?</a></li>
+              <li><a href="https://www.knowyourcountry.com/" target="_blank" rel="noopener noreferrer">Know Your Country</a></li>
+              <li><a href="https://www.reconciliation.org.au/reconciliation/acknowledgement-of-country-and-welcome-to-country/" target="_blank" rel="noopener noreferrer">Reconciliation Australia: Acknowledgement of Country and Welcome to Country</a></li>
+            </ul>
+
+            <p class="mb-1"><strong>Common mistakes to avoid</strong></p>
+            <ul class="mb-0">
+              <li>Tokenistic or generic wording that could apply to any location</li>
+              <li>Misidentifying the Traditional Custodians of this specific venue</li>
+              <li>Confusing an Acknowledgement of Country with a Welcome to Country (a Welcome can only be given by Traditional Owners themselves)</li>
+              <li>Not accounting for situations where multiple groups claim custodianship of the same area</li>
+            </ul>
+          </details>
         </fieldset>
 
         <div class="d-flex flex-wrap gap-2 mb-5">
