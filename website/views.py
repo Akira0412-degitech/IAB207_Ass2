@@ -39,6 +39,18 @@ def local_time(value):
         'am' if local.hour < 12 else 'pm')
 
 
+@main_bp.app_template_filter('money')
+def money(value):
+    """US10, US11 - format a price as dollars with thousands separators.
+
+    '%.2f' alone renders a large order as $5250.00; this gives $5,250.00,
+    and keeps the history and confirmation pages formatting money the same way.
+    """
+    if value is None:
+        return ''
+    return '${:,.2f}'.format(value)
+
+
 def _save_poster(file_storage):
     """Save an uploaded poster and return its path relative to static/.
 
@@ -403,15 +415,34 @@ def bookings():
     """US11 - a user's own booking history, so it requires a session.
 
     Filtered by the session user, never by an id in the URL, so nobody can
-    page through someone else's tickets. Newest first so an order placed a
-    moment ago is the first thing the user sees (US8 AC5).
+    page through someone else's tickets. Orders are split into gigs still
+    to come and gigs that are over or cancelled, so the next night out is
+    at the top instead of buried among old orders.
     """
+    # Every stub shows the event's title, poster and live status, and status
+    # needs that event's bookings to count tickets remaining. selectinload
+    # fetches all of them in two extra queries up front, instead of one
+    # lazy query per order as the template walks the list.
     orders = db.session.scalars(
         db.select(Booking)
         .where(Booking.user_id == current_user.id)
+        .options(db.selectinload(Booking.event).selectinload(Event.bookings))
         .order_by(Booking.booked_at.desc())
     ).all()
-    return render_template('bookings.html', bookings=orders)
+
+    # Status is derived in Python (Event.status), so the split happens here
+    # rather than in SQL. Only Open events can be booked, so an order placed
+    # a moment ago always lands in upcoming.
+    upcoming = [b for b in orders if b.event.status in ('Open', 'Sold Out')]
+    finished = [b for b in orders if b.event.status in ('Inactive', 'Cancelled')]
+
+    # sort() is stable and orders already arrive newest-booked first, so a
+    # single key keeps booked_at descending as the tie-break.
+    upcoming.sort(key=lambda b: b.event.event_date)
+    finished.sort(key=lambda b: b.event.event_date, reverse=True)
+
+    return render_template('bookings.html', upcoming=upcoming,
+                           finished=finished, order_count=len(orders))
 
 
 @main_bp.route('/aoc')
