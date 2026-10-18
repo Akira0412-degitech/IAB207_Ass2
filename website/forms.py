@@ -251,11 +251,12 @@ class TicketQuantityField(IntegerField):
     """
 
     def process_formdata(self, valuelist):
-        # A blank box is left for InputRequired to report, otherwise the
-        # user would see "whole number" when they simply typed nothing.
+        # Blank and spaces-only get the same message here. InputRequired
+        # treats "   " as filled in, which would otherwise let it through to
+        # NumberRange and show "Book at least 1 ticket" instead.
         if valuelist and not valuelist[0].strip():
             self.data = None
-            return
+            raise ValueError('Enter how many tickets you want')
         try:
             super().process_formdata(valuelist)
         except ValueError:
