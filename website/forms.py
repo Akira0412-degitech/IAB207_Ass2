@@ -200,6 +200,32 @@ class EventForm(FlaskForm):
                                   .format(self.venue_name.data))
 
 
+class EventEditForm(EventForm):
+    """US14 - same fields as creating, but the poster is optional.
+
+    A creator fixing a set time has no reason to re-upload the poster, so
+    FileRequired is dropped while FileAllowed still rejects anything that
+    is not a JPG or PNG. Subclassing keeps the date and Acknowledgement
+    rules identical to the create form, so the two cannot drift apart.
+    """
+
+    image = FileField("Replace gig image", validators=[
+        FileAllowed(['jpg', 'jpeg', 'png'], 'JPG or PNG images only'),
+    ])
+    submit = SubmitField("Save changes")
+
+
+class CancelForm(FlaskForm):
+    """US14 - cancelling a gig.
+
+    Carries no fields: it exists so the cancel button is a real POST with
+    a CSRF token, rather than a link that a crawler or a stray click could
+    trigger.
+    """
+
+    submit = SubmitField("Cancel this gig")
+
+
 class CommentForm(FlaskForm):
     """US7 - post a comment on a gig.
 

@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{# US14 - shown when a signed-in user tries to edit or cancel a gig that
+   someone else created. Extends base.html so the navbar and footer are
+   present, matching the 404 and 500 pages. #}
+
+{% block title %}Not your gig — Amplifi{% endblock %}
+
+{% block content %}
+<main class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6 text-center">
+
+      {# Large decorative code — aria-hidden so screen readers skip the
+         number and go straight to the heading below. #}
+      <p class="err-code" aria-hidden="true">403</p>
+
+      <h1 style="font-size:clamp(2rem,7vw,3.5rem);">
+        That one&rsquo;s not yours to change.
+      </h1>
+
+      <p class="meta mb-3">
+        Only the creator can edit or cancel a gig
+      </p>
+
+      <p class="mb-5">
+        You can still view the listing, book tickets and join the comments —
+        but changing the details is up to whoever put the show on.
+      </p>
+
+      <div class="d-flex flex-wrap gap-3 justify-content-center">
+        <a href="{{ url_for('main.index') }}" class="btn btn-ink">
+          Back to all gigs
+        </a>
+        <a href="{{ url_for('main.create_event') }}" class="btn btn-outline-ink">
+          List your own gig
+        </a>
+      </div>
+
+    </div>
+  </div>
+</main>
+{% endblock %}

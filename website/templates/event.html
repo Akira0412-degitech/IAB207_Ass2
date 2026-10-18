@@ -120,7 +120,7 @@
 
     </div>
 
-    <!-- Right: booking. Wired up by US8. -->
+    <!-- Right: booking, plus the creator's own controls. -->
     <div class="col-lg-4">
       <div class="booking-box">
         <p class="meta mb-1">General admission</p>
@@ -139,6 +139,31 @@
         {% else %}
         <p class="status status-inactive d-block text-center">Event finished</p>
         <p class="form-text mt-2 mb-0">This gig has already taken place.</p>
+        {% endif %}
+
+        <!-- US14: only the creator sees these controls, and both routes
+             check ownership again on the server - hiding a button is not
+             access control. -->
+        {% if current_user.is_authenticated and current_user.id == event.creator_id %}
+        <hr class="my-3">
+        <p class="meta mb-2">You created this gig</p>
+
+        {% if event.status == 'Inactive' %}
+        <p class="form-text mb-0">Past gigs can no longer be edited.</p>
+        {% else %}
+        <a href="{{ url_for('main.edit_event', event_id=event.id) }}"
+           class="btn btn-outline-ink w-100 mb-2">Edit details</a>
+
+        {% if not event.is_cancelled %}
+        <!-- Cancelling is a POST with its own CSRF token so it can never be
+             triggered by following a link or by a crawler. -->
+        <form method="post" action="{{ url_for('main.cancel_event', event_id=event.id) }}">
+          {{ cancel_form.hidden_tag() }}
+          {{ cancel_form.submit(class="btn btn-outline-ink w-100") }}
+        </form>
+        <p class="form-text mt-2 mb-0">Cancelling cannot be undone.</p>
+        {% endif %}
+        {% endif %}
         {% endif %}
       </div>
     </div>

@@ -78,6 +78,17 @@ def create_app():
     # Registered after blueprints so get_or_404() calls in views also route
     # here rather than showing Flask's default HTML error pages.
 
+    @app.errorhandler(403)
+    def forbidden(e):
+        """US14 - a creator-only action attempted by somebody else.
+
+        abort(403) in the edit and cancel views routes here, so those call
+        sites do not need to build their own response. Note this is about
+        ownership, not authentication: a visitor who is not logged in at all
+        is sent to the login page by @login_required instead.
+        """
+        return render_template('403.html'), 403
+
     @app.errorhandler(404)
     def page_not_found(e):
         """US19 - return the custom 404 template with the correct status code.

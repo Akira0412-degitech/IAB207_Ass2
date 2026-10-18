@@ -1,0 +1,217 @@
+{% extends "base.html" %}
+
+{% block title %}Edit {{ event.title }} — Amplifi{% endblock %}
+
+{% macro field(f) %}
+  {# One field with its label and errors. Extra HTML attributes are passed
+     as keyword arguments and picked up from Jinja's implicit `kwargs`
+     object, which must not be declared in the macro signature. #}
+  {{ f.label(class="form-label") }}
+  {{ f(class="form-control" + (" is-invalid" if f.errors else ""), **kwargs) }}
+  {% for error in f.errors %}
+  <div class="invalid-feedback d-block">{{ error }}</div>
+  {% endfor %}
+{% endmacro %}
+
+{% macro select(f) %}
+  {{ f.label(class="form-label") }}
+  {{ f(class="form-select" + (" is-invalid" if f.errors else "")) }}
+  {% for error in f.errors %}
+  <div class="invalid-feedback d-block">{{ error }}</div>
+  {% endfor %}
+{% endmacro %}
+
+{% block content %}
+<main class="container py-4">
+
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb meta">
+      <li class="breadcrumb-item"><a href="{{ url_for('main.index') }}">Gigs</a></li>
+      <li class="breadcrumb-item"><a href="{{ url_for('main.event_detail', event_id=event.id) }}">{{ event.title }}</a></li>
+      <li class="breadcrumb-item active" aria-current="page">Edit</li>
+    </ol>
+  </nav>
+
+  <div class="row">
+    <div class="col-lg-9 col-xl-8">
+      <h1 style="font-size:clamp(2rem,6vw,3rem);">Edit gig</h1>
+      <p class="meta mb-4">
+        Status is <span class="status status-{{ event.status|lower|replace(' ', '') }}">{{ event.status }}</span>
+        and is set automatically — it cannot be edited here.
+      </p>
+
+      <form method="post" enctype="multipart/form-data" novalidate>
+        {{ form.hidden_tag() }}
+
+        <fieldset class="panel">
+          <legend>The gig</legend>
+
+          <div class="mb-3">
+            {{ field(form.title) }}
+            <div class="form-text">This is the headline shown on the landing page.</div>
+          </div>
+
+          <div class="mb-3">
+            {{ field(form.description, rows="5") }}
+          </div>
+
+          <div class="row g-3">
+            <div class="col-md-6">{{ select(form.genre) }}</div>
+            <div class="col-md-6">
+              {{ select(form.age_restriction) }}
+              <div class="form-text">Licensed venues are almost always 18+.</div>
+            </div>
+          </div>
+        </fieldset>
+
+        <fieldset class="panel">
+          <legend>Lineup</legend>
+          <p class="form-text mb-3">The headline act is required. Clear a support slot to remove that act.</p>
+
+          <div class="row g-3 align-items-start mb-3">
+            <div class="col-sm-7">{{ field(form.artist_1) }}</div>
+            <div class="col-sm-5">{{ field(form.artist_1_time) }}</div>
+          </div>
+
+          <div class="row g-3 align-items-start mb-3">
+            <div class="col-sm-7">{{ field(form.artist_2) }}</div>
+            <div class="col-sm-5">{{ field(form.artist_2_time) }}</div>
+          </div>
+
+          <div class="row g-3 align-items-start">
+            <div class="col-sm-7">{{ field(form.artist_3) }}</div>
+            <div class="col-sm-5">{{ field(form.artist_3_time) }}</div>
+          </div>
+        </fieldset>
+
+        <fieldset class="panel">
+          <legend>When and where</legend>
+
+          <div class="row g-3">
+            <div class="col-md-4">{{ field(form.event_date) }}</div>
+            <div class="col-6 col-md-4">{{ field(form.doors_time) }}</div>
+            <div class="col-6 col-md-4">{{ field(form.end_time) }}</div>
+          </div>
+
+          <div class="row g-3 mt-0">
+            <div class="col-md-6">{{ field(form.venue_name) }}</div>
+            <div class="col-md-6">
+              {{ field(form.venue_address) }}
+              <div class="form-text">Include the suburb so punters know where to go.</div>
+            </div>
+          </div>
+        </fieldset>
+
+        <fieldset class="panel">
+          <legend>Tickets</legend>
+
+          <div class="row g-3">
+            <div class="col-md-6">
+              {{ form.ticket_price.label(class="form-label") }}
+              <div class="input-group">
+                <span class="input-group-text" style="border:2px solid #14110f;border-radius:0;">$</span>
+                {{ form.ticket_price(class="form-control" + (" is-invalid" if form.ticket_price.errors else ""),
+                                     step="0.50") }}
+              </div>
+              {% for error in form.ticket_price.errors %}
+              <div class="invalid-feedback d-block">{{ error }}</div>
+              {% endfor %}
+            </div>
+            <div class="col-md-6">
+              {{ field(form.tickets_total, min="1") }}
+              <div class="form-text">
+                {{ event.tickets_total - event.tickets_remaining }} already booked.
+                Lowering the allocation below that will show the gig as sold out.
+              </div>
+            </div>
+          </div>
+        </fieldset>
+
+        <fieldset class="panel">
+          <legend>Poster</legend>
+
+          <p class="meta mb-2">Current poster</p>
+          <img src="{{ url_for('static', filename=event.image_filename) }}"
+               alt="Current poster for {{ event.title }}"
+               class="mb-3" style="max-width:260px;border:2px solid #14110f;">
+
+          {{ field(form.image, accept="image/png, image/jpeg") }}
+          <div class="form-text">Leave this empty to keep the poster above.</div>
+        </fieldset>
+
+        <fieldset class="panel">
+          <legend>Acknowledgement of Country</legend>
+
+          <p class="mb-3">Choose how your listing acknowledges the Traditional Custodians of the land the gig is held on.
+            <a href="{{ url_for('main.aoc') }}">What is an Acknowledgement of Country?</a>
+          </p>
+
+          {% set aoc_hints = {
+            'none': 'Nothing is shown on your listing.',
+            'generic': 'A general statement that does not name a specific group.',
+            'enhanced': 'Names the Traditional Custodians of the land your venue sits on.',
+          } %}
+          {% for option in form.aoc_type %}
+          <div class="form-check mb-3">
+            {{ option(class="form-check-input") }}
+            <label class="form-check-label" for="{{ option.id }}">
+              <strong>{{ option.label.text }}</strong>
+              <span class="d-block form-text">{{ aoc_hints[option.data] }}</span>
+            </label>
+          </div>
+          {% endfor %}
+          {% for error in form.aoc_type.errors %}
+          <div class="invalid-feedback d-block">{{ error }}</div>
+          {% endfor %}
+
+          <!-- US13: no JavaScript, so the enhanced guidance sits in a native
+               <details>, opened when 'enhanced' is the current selection. -->
+          <details class="mt-2" {% if form.aoc_type.data == 'enhanced' %}open{% endif %}>
+            <summary><strong>Writing an enhanced Acknowledgement</strong></summary>
+
+            <div class="mt-3 mb-3">
+              {{ form.aoc_group.label(class="form-label") }}
+              {{ form.aoc_group(class="form-control" + (" is-invalid" if form.aoc_group.errors else ""), placeholder="Turrbal and Yugara peoples") }}
+              {% for error in form.aoc_group.errors %}
+              <div class="invalid-feedback d-block">{{ error }}</div>
+              {% endfor %}
+              <div class="form-text">Check with your local Land Council if you're unsure. Use the generic option rather than guessing.</div>
+            </div>
+
+            <div class="mb-3">
+              {{ form.aoc_statement.label(class="form-label") }}
+              {{ form.aoc_statement(class="form-control" + (" is-invalid" if form.aoc_statement.errors else ""), rows=4) }}
+              {% for error in form.aoc_statement.errors %}
+              <div class="invalid-feedback d-block">{{ error }}</div>
+              {% endfor %}
+              <div class="form-text">It must name the Traditional Custodians you entered above and your venue, and is shown on your listing exactly as written.</div>
+            </div>
+
+            <p class="mb-1"><strong>Find out whose Country your venue is on</strong></p>
+            <ul>
+              <li><a href="https://aiatsis.gov.au/explore/map-indigenous-australia" target="_blank" rel="noopener noreferrer">AIATSIS Map of Indigenous Australia</a></li>
+              <li><a href="https://aiatsis.gov.au/whose-country" target="_blank" rel="noopener noreferrer">AIATSIS: Whose Country am I on?</a></li>
+              <li><a href="https://www.knowyourcountry.com/" target="_blank" rel="noopener noreferrer">Know Your Country</a></li>
+              <li><a href="https://www.reconciliation.org.au/reconciliation/acknowledgement-of-country-and-welcome-to-country/" target="_blank" rel="noopener noreferrer">Reconciliation Australia: Acknowledgement of Country and Welcome to Country</a></li>
+            </ul>
+
+            <p class="mb-1"><strong>Common mistakes to avoid</strong></p>
+            <ul class="mb-0">
+              <li>Tokenistic or generic wording that could apply to any location</li>
+              <li>Misidentifying the Traditional Custodians of this specific venue</li>
+              <li>Confusing an Acknowledgement of Country with a Welcome to Country (a Welcome can only be given by Traditional Owners themselves)</li>
+              <li>Not accounting for situations where multiple groups claim custodianship of the same area</li>
+            </ul>
+          </details>
+        </fieldset>
+
+        <div class="d-flex flex-wrap gap-2 mb-5">
+          {{ form.submit(class="btn btn-ink") }}
+          <a href="{{ url_for('main.event_detail', event_id=event.id) }}" class="btn btn-outline-ink">Discard changes</a>
+        </div>
+
+      </form>
+    </div>
+  </div>
+</main>
+{% endblock %}
