@@ -11,11 +11,18 @@ the only way to pick up a new column, because db.create_all() in
 create_app() creates missing tables but never alters existing ones.
 
 The data below covers all four event statuses so the landing page,
-genre filter, search and booking history can all be demonstrated:
-    Open      - Halcyon Drift, Low Tide Club, Fernway
+genre filter, search, AI vibe search and booking history can all be
+demonstrated:
+    Open      - Halcyon Drift, Low Tide Club, Fernway, Lantern Hours,
+                Southside Cypher, Saltwater Matinee
     Sold Out  - Quarry Belt (a seeded booking takes the last ticket)
     Cancelled - Verandah Saints (is_cancelled flag)
     Inactive  - Pilot Light (event date in the past)
+
+Lantern Hours (Folk / Acoustic), Southside Cypher (Hip-Hop / R&B) and
+Saltwater Matinee (an all-ages afternoon show) exist for US4: they give AI
+vibe search an Open gig to find in genres where the original gigs are
+cancelled or past.
 
 Dates are relative to today rather than hard-coded, so the demo data
 never goes stale and "Inactive" always means genuinely past.
@@ -73,8 +80,12 @@ def seed():
         def make_event(title, description, image, genre, age, days_from_now,
                        venue, address, price, total, acts,
                        aoc_type='generic', aoc_group=None, aoc_statement=None,
-                       cancelled=False):
-            """acts is a list of (name, time) tuples, headliner first."""
+                       cancelled=False, doors=time(19, 30), end=time(23, 0)):
+            """acts is a list of (name, time) tuples, headliner first.
+
+            doors and end default to a standard evening; the afternoon
+            show below overrides them so its event page is accurate.
+            """
             acts = acts + [(None, None)] * (3 - len(acts))
             return Event(
                 creator_id=promoter.id,
@@ -84,8 +95,8 @@ def seed():
                 genre=genre,
                 age_restriction=age,
                 event_date=today + timedelta(days=days_from_now),
-                doors_time=time(19, 30),
-                end_time=time(23, 0),
+                doors_time=doors,
+                end_time=end,
                 venue_name=venue,
                 venue_address=address,
                 ticket_price=price,
@@ -174,7 +185,51 @@ def seed():
              ('Nite Errand', time(21, 0))],
         )
 
-        db.session.add_all([halcyon, quarry, lowtide, fernway, verandah, pilot])
+        # US4 - three more Open gigs so AI vibe search has something to
+        # discover. The only Folk / Acoustic gig above is cancelled and the
+        # only Hip-Hop / R&B one is in the past, so neither can be an AI
+        # pick. Lantern Hours never uses the words "chill", "acoustic" or
+        # "night": "chill acoustic night" can only find it by meaning.
+        lantern = make_event(
+            'Lantern Hours',
+            'Three songwriters share one stage and take turns, in the '
+            'round, with nothing louder than a guitar and a cello. The '
+            'hall is lit by candles and set with seats, so settle in with '
+            'a glass of red and let the evening move slowly.',
+            'img/gig-verandah.jpg', 'Folk / Acoustic', '18+', 10,
+            'The Old Museum', '480 Gregory Terrace, Bowen Hills', 32.00, 140,
+            [('Maggie Thorne', time(21, 0)),
+             ('Elkhorn', time(20, 20)),
+             ('Juniper Lane', time(19, 45))],
+        )
+
+        cypher = make_event(
+            'Southside Cypher',
+            'Brisbane MCs trade verses over a live band that switches '
+            'between boom bap and slow-burn R&B. Open mic between sets, so '
+            'put your name down at the door if you have bars.',
+            'img/gig-pilotlight.jpg', 'Hip-Hop / R&B', '18+', 17,
+            'The Brightside', '27 Warner Street, Fortitude Valley', 24.00, 250,
+            [('Kaya Lewis', time(21, 30)),
+             ('Low Orbit Crew', time(20, 45)),
+             ('DJ Mangrove', time(20, 0))],
+        )
+
+        matinee = make_event(
+            'Saltwater Matinee',
+            'An early show for anyone who cannot do late ones: three surf '
+            'rock bands, a beer garden with a soft drink bar, and home '
+            'before dark. Under 12s free with a paying adult.',
+            'img/gig-fernway.jpg', 'Rock / Punk', 'All ages', 24,
+            'Solbar', '19 Careeba Street, Maroochydore', 15.00, 300,
+            [('Rip Current', time(16, 0)),
+             ('Sandfly', time(15, 15)),
+             ('Banksia Kids', time(14, 30))],
+            doors=time(14, 0), end=time(17, 30),
+        )
+
+        db.session.add_all([halcyon, quarry, lowtide, fernway, verandah, pilot,
+                            lantern, cypher, matinee])
         db.session.commit()
 
         # ------------------------------------------------------------------
