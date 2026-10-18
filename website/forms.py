@@ -3,14 +3,14 @@ from wtforms.fields import (SubmitField, StringField, PasswordField,
                             RadioField, TextAreaField)
 from wtforms.validators import InputRequired, Email, EqualTo, Length, Regexp
 from wtforms import ValidationError
- 
+
 from .models import User
 from . import db
- 
- 
+
+
 class LoginForm(FlaskForm):
     """US16 - existing users sign in with their email address and password."""
- 
+
     email = StringField("Email address", validators=[
         InputRequired('Enter your email address'),
         Email('Enter a valid email address'),
@@ -19,11 +19,11 @@ class LoginForm(FlaskForm):
         InputRequired('Enter your password'),
     ])
     submit = SubmitField("Login")
- 
- 
+
+
 class RegisterForm(FlaskForm):
     """US15 - new users register with the six details required by the brief."""
- 
+
     first_name = StringField("First name", validators=[
         InputRequired('Enter your first name'),
         Length(max=50),
@@ -47,7 +47,7 @@ class RegisterForm(FlaskForm):
         InputRequired('Enter your street address'),
         Length(max=200),
     ])
- 
+
     # The two password fields are linked so the user must type the same value
     # twice before the form will validate.
     password = PasswordField("Password", validators=[
@@ -56,12 +56,12 @@ class RegisterForm(FlaskForm):
         EqualTo('confirm', message='Passwords should match'),
     ])
     confirm = PasswordField("Confirm password")
- 
+
     submit = SubmitField("Register")
- 
+
     def validate_email(self, field):
         """US15 - refuse an email address that is already registered.
- 
+
         WTForms calls any method named validate_<fieldname> automatically
         during validate_on_submit(), so this needs no wiring in the view.
         """
@@ -110,3 +110,18 @@ class EventForm(FlaskForm):
             raise ValidationError('Name the Traditional Custodians you entered '
                                   'above in your statement')
         # TODO(#14): also require the venue name/suburb once those fields exist
+
+
+class CommentForm(FlaskForm):
+    """US7 - post a comment on a gig.
+
+    Only the body is captured; the author and timestamp come from the
+    session and the database default rather than from the form, so neither
+    can be forged by the submitter.
+    """
+
+    body = TextAreaField("Add a comment", validators=[
+        InputRequired('Write something before posting'),
+        Length(max=1000, message='Keep comments under 1000 characters'),
+    ])
+    submit = SubmitField("Post comment")

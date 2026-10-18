@@ -63,12 +63,11 @@
         <li><span class="fact-key">Tickets remaining</span><span class="fact-val">{{ event.tickets_remaining }} of {{ event.tickets_total }}</span></li>
       </ul>
 
-      <!-- US5: the Acknowledgement is only shown when the creator chose one.
-           US13: an enhanced one is the creator's own statement, shown as written. -->
-      {% if event.aoc_type == 'enhanced' and event.aoc_statement %}
+      <!-- US5: the Acknowledgement is only shown when the creator chose one. -->
+      {% if event.aoc_type == 'enhanced' and event.aoc_group %}
       <div class="aoc mb-4">
         <p class="meta mb-2">Acknowledgement of Country</p>
-        <p class="mb-0">{{ event.aoc_statement }}</p>
+        <p class="mb-0">We acknowledge the {{ event.aoc_group }} as the Traditional Custodians of the land on which this event takes place, and pay our respects to Elders past and present. This always was, and always will be, Aboriginal land.</p>
       </div>
       {% elif event.aoc_type == 'generic' %}
       <div class="aoc mb-4">
@@ -77,12 +76,30 @@
       </div>
       {% endif %}
 
-      <!-- US6: anybody can read the comments, whatever the gig's status.
-           Posting them is US7 in Sprint 2. -->
+      <!-- US6 reading / US7 posting. Anybody can read; only a signed-in
+           visitor sees the form, and the link below carries ?next= so
+           logging in returns them to this page. -->
       <section aria-labelledby="comments-heading">
         <div class="rule-heading">
           <h2 id="comments-heading">Comments ({{ comments|length }})</h2>
         </div>
+
+        {% if current_user.is_authenticated %}
+        <form class="my-4" method="post"
+              action="{{ url_for('main.post_comment', event_id=event.id) }}">
+          {{ form.hidden_tag() }}
+          <label for="body" class="form-label">Add a comment</label>
+          {{ form.body(class="form-control", id="body", rows="3",
+                       placeholder="Ask about set times, parking, or the support acts") }}
+          <div class="form-text mb-3">Posting as {{ current_user.first_name }} {{ current_user.surname }}. Your name and the date will be shown.</div>
+          <button type="submit" class="btn btn-ink">Post comment</button>
+        </form>
+        {% else %}
+        <p class="my-4">
+          <a href="{{ url_for('auth.login', next=url_for('main.event_detail', event_id=event.id)) }}">Log in</a>
+          to post a comment.
+        </p>
+        {% endif %}
 
         {% for comment in comments %}
         <article class="comment">
@@ -99,7 +116,7 @@
 
     </div>
 
-    <!-- Right: booking. Wired up in Sprint 2 (US8). -->
+    <!-- Right: booking. Wired up by US8. -->
     <div class="col-lg-4">
       <div class="booking-box">
         <p class="meta mb-1">General admission</p>
@@ -108,7 +125,7 @@
 
         {% if event.status == 'Open' %}
         <button type="button" class="btn btn-ink w-100" disabled>Book tickets</button>
-        <p class="form-text mt-2 mb-0">Booking arrives with issue #8.</p>
+        <p class="form-text mt-2 mb-0">Booking arrives with US8.</p>
         {% elif event.status == 'Sold Out' %}
         <p class="status status-soldout d-block text-center">Sold out</p>
         <p class="form-text mt-2 mb-0">No tickets left for this gig.</p>

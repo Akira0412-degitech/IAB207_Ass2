@@ -1,8 +1,8 @@
-from flask import Blueprint, render_template, request
-from flask_login import login_required
+from flask import Blueprint, render_template, request, redirect, url_for, flash
+from flask_login import login_required, current_user
 
 from .models import Event, Comment
-from .forms import EventForm
+from .forms import EventForm, CommentForm
 from . import db
 
 main_bp = Blueprint('main', __name__)
@@ -65,7 +65,7 @@ def event_detail(event_id):
     """US5, US6 - full details for one gig, plus the comments left on it.
 
     Both are open to visitors with no login. get_or_404 turns an unknown id
-    into a clean 404 rather than a crash, which US19 will style later.
+    into a clean 404 rather than a crash, which US19's error pages style.
     """
     event = db.get_or_404(Event, event_id)
 
@@ -77,7 +77,39 @@ def event_detail(event_id):
         .order_by(Comment.created_at.desc())
     ).all()
 
-    return render_template('event.html', event=event, comments=comments)
+    # US7 - the form is rendered only for signed-in visitors; see event.html.
+    return render_template('event.html', event=event,
+                           comments=comments, form=CommentForm())
+
+
+@main_bp.route('/event/<int:event_id>/comment', methods=['POST'])
+@login_required
+def post_comment(event_id):
+    """US7 - add a comment to a gig.
+
+    Kept separate from event_detail so that page stays a pure read, and so
+    the redirect afterwards means refreshing never resubmits the comment.
+    @login_required satisfies the "prompted to log in" criterion: an
+    anonymous POST is sent to the login page and returned here.
+    """
+    event = db.get_or_404(Event, event_id)
+    form = CommentForm()
+
+    if form.validate_on_submit():
+        db.session.add(Comment(
+            user_id=current_user.id,
+            event_id=event.id,
+            body=form.body.data.strip(),
+        ))
+        db.session.commit()
+    else:
+        # An empty or over-long comment: report it rather than failing silently.
+        for error in form.body.errors:
+            flash(error)
+
+    return redirect(
+        url_for('main.event_detail', event_id=event.id) + '#comments-heading'
+    )
 
 
 @main_bp.route('/create', methods=['GET'])
