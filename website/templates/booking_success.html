@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block title %}Order {{ booking.order_id }} — Amplifi{% endblock %}
+
+{% block content %}
+<main class="container py-4">
+
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb meta">
+      <li class="breadcrumb-item"><a href="{{ url_for('main.index') }}">Gigs</a></li>
+      <li class="breadcrumb-item"><a href="{{ url_for('main.bookings') }}">My tickets</a></li>
+      <li class="breadcrumb-item active" aria-current="page">{{ booking.order_id }}</li>
+    </ol>
+  </nav>
+
+  <div class="row justify-content-center">
+    <div class="col-md-10 col-lg-7">
+
+      <!-- This is also the permanent page for the order (linked from My tickets),
+           so the heading follows the gig's live status rather than assuming
+           the order was placed a moment ago. -->
+      <p class="meta mb-1">Order confirmed</p>
+      {% if event.status == 'Cancelled' %}
+      <h1 style="font-size:clamp(2rem,6vw,3rem);">This gig was cancelled</h1>
+      <p class="mb-4">The organiser cancelled {{ event.title }} after you booked. Your ${{ '%.2f'|format(booking.total_price) }} has been refunded.</p>
+      {% elif event.status == 'Inactive' %}
+      <h1 style="font-size:clamp(2rem,6vw,3rem);">Your order</h1>
+      <p class="mb-4">{{ event.title }} has already taken place. Your order details are kept here for your records.</p>
+      {% else %}
+      <h1 style="font-size:clamp(2rem,6vw,3rem);">You're going!</h1>
+      <p class="mb-4">{{ booking.quantity }} {{ 'ticket' if booking.quantity == 1 else 'tickets' }} to {{ event.title }}, booked in your name.</p>
+      {% endif %}
+
+      <!-- US8 AC4: Sold Out is derived from the bookings, so saving this order
+           is all it took to flip the gig's status. -->
+      {% if event.status == 'Sold Out' %}
+      <p class="booking-notice mb-4"><span class="status status-soldout me-2">Sold out</span>This gig is now sold out, so you got in just in time.</p>
+      {% endif %}
+
+      <div class="panel booking-panel p-4">
+
+        <div class="booking-ref mb-4">
+          <p class="meta mb-1">Order ID</p>
+          <p class="order-id order-id-lg mb-1">{{ booking.order_id }}</p>
+          <p class="form-text mb-0">Keep this as your reference for this order. You can find it again any time under My tickets.</p>
+        </div>
+
+        <!-- Price and total are the snapshot stored on the booking, not the
+             event's current price, so they always match what was paid. -->
+        <ul class="fact-list mb-3">
+          <li><span class="fact-key">Gig</span><span class="fact-val"><a href="{{ url_for('main.event_detail', event_id=event.id) }}">{{ event.title }}</a></span></li>
+          <li><span class="fact-key">Date</span><span class="fact-val">{{ event.event_date.strftime('%A %d %B %Y') }}</span></li>
+          {% if event.doors_time %}
+          <li><span class="fact-key">Doors open</span><span class="fact-val">{{ event.doors_time.strftime('%I:%M %p')|lower }}</span></li>
+          {% endif %}
+          <li><span class="fact-key">Venue</span><span class="fact-val">{{ event.venue_name }}{% if event.venue_address %}, {{ event.venue_address }}{% endif %}</span></li>
+          <li><span class="fact-key">Quantity</span><span class="fact-val">{{ booking.quantity }}</span></li>
+          <li><span class="fact-key">Price per ticket</span><span class="fact-val">${{ '%.2f'|format(booking.price_per_ticket) }}</span></li>
+          <li><span class="fact-key">Booked</span><span class="fact-val">{{ booking.booked_at|local_time }}</span></li>
+        </ul>
+
+        <div class="booking-total d-flex justify-content-between align-items-baseline gap-3">
+          <span class="meta">Total{% if event.status == 'Cancelled' %} · refunded{% endif %}</span>
+          <span class="price">${{ '%.2f'|format(booking.total_price) }}</span>
+        </div>
+
+        <div class="d-grid gap-2 d-sm-flex mt-4">
+          <a class="btn btn-ink" href="{{ url_for('main.bookings') }}">View my tickets</a>
+          <a class="btn btn-outline-ink" href="{{ url_for('main.index') }}">Find another gig</a>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+</main>
+{% endblock %}
