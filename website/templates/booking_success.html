@@ -22,7 +22,7 @@
       <p class="meta mb-1">Order confirmed</p>
       {% if event.status == 'Cancelled' %}
       <h1 style="font-size:clamp(2rem,6vw,3rem);">This gig was cancelled</h1>
-      <p class="mb-4">The organiser cancelled {{ event.title }} after you booked. Your ${{ '%.2f'|format(booking.total_price) }} has been refunded.</p>
+      <p class="mb-4">The organiser cancelled {{ event.title }} after you booked. Your {{ booking.total_price|money }} has been refunded.</p>
       {% elif event.status == 'Inactive' %}
       <h1 style="font-size:clamp(2rem,6vw,3rem);">Your order</h1>
       <p class="mb-4">{{ event.title }} has already taken place. Your order details are kept here for your records.</p>
@@ -55,13 +55,13 @@
           {% endif %}
           <li><span class="fact-key">Venue</span><span class="fact-val">{{ event.venue_name }}{% if event.venue_address %}, {{ event.venue_address }}{% endif %}</span></li>
           <li><span class="fact-key">Quantity</span><span class="fact-val">{{ booking.quantity }}</span></li>
-          <li><span class="fact-key">Price per ticket</span><span class="fact-val">${{ '%.2f'|format(booking.price_per_ticket) }}</span></li>
+          <li><span class="fact-key">Price per ticket</span><span class="fact-val">{{ booking.price_per_ticket|money }}</span></li>
           <li><span class="fact-key">Booked</span><span class="fact-val">{{ booking.booked_at|local_time }}</span></li>
         </ul>
 
         <div class="booking-total d-flex justify-content-between align-items-baseline gap-3">
           <span class="meta">Total{% if event.status == 'Cancelled' %} · refunded{% endif %}</span>
-          <span class="price">${{ '%.2f'|format(booking.total_price) }}</span>
+          <span class="price">{{ booking.total_price|money }}</span>
         </div>
 
         <div class="d-grid gap-2 d-sm-flex mt-4">

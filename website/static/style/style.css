@@ -515,3 +515,43 @@ fieldset.panel legend {
 }
 
 .stub-title:hover { color: var(--riso-blue); }
+
+/* ---------- Booking history (US11) ---------- */
+
+/* A tighter fact-list for the price breakdown, so three rows still fit
+   alongside the poster without making every stub twice as tall. */
+.stub-facts { margin-bottom: 0.5rem; }
+.stub-facts li { padding: 0.3rem 0; }
+
+.stub-note {
+  font-size: 0.9375rem;
+  font-weight: 500;
+  margin-top: 0.5rem;
+}
+
+/* The posters print the gig title almost edge to edge, so cropping them to
+   the stub's height cut letters off. contain shows the whole poster, and
+   the paper background matches the posters' own, so the spare space
+   above and below does not read as a letterbox. */
+.stub-img {
+  object-fit: contain;
+  background: var(--paper);
+}
+
+/* Over or cancelled gigs: grey the poster, as the landing page cards do,
+   but leave the text at full contrast so the order details stay readable. */
+.stub-past .stub-img,
+.stub-cancelled .stub-img { filter: grayscale(1); }
+
+.stub-cancelled .stub-body { background: var(--paper); }
+.stub-cancelled .stub-note { color: #a3262d; }
+
+/* On phones the poster spans the full width. The fixed 150px height set
+   above cropped off the gig title printed along the bottom of each poster;
+   a 4:3 box matches the posters, so the whole poster fits. */
+@media (max-width: 575.98px) {
+  .stub-img {
+    height: auto;
+    aspect-ratio: 4 / 3;
+  }
+}

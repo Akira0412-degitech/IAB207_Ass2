@@ -2,37 +2,71 @@
 
 {% block title %}My tickets — Amplifi{% endblock %}
 
+{# US11 - one ticket stub. A macro so the Upcoming and Past and cancelled
+   sections cannot drift apart. #}
+{% macro stub(booking) %}
+{% set event = booking.event %}
+{% set heading_id = 'order-' ~ booking.id ~ '-title' %}
+<article class="stub{% if event.status == 'Cancelled' %} stub-cancelled{% elif event.status == 'Inactive' %} stub-past{% endif %}" aria-labelledby="{{ heading_id }}">
+  <img src="{{ url_for('static', filename=event.image_filename) }}" class="stub-img" alt="Poster for {{ event.title }} at {{ event.venue_name }}">
+  <div class="stub-body">
+    {# Live status, so a gig cancelled after booking shows as Cancelled here too. #}
+    <span class="status status-{{ event.status|lower|replace(' ', '') }}">{{ event.status }}</span>
+    <h3 class="h4 mt-2 mb-1" id="{{ heading_id }}"><a class="stub-title" href="{{ url_for('main.event_detail', event_id=event.id) }}">{{ event.title }}</a></h3>
+    <p class="meta mb-2">{{ event.event_date.strftime('%a %d %b %Y') }} · {{ event.venue_name }}</p>
+
+    {# The stored snapshot, never event.ticket_price: the creator can change
+       the price after this order was placed, and this is what was paid. #}
+    <ul class="fact-list stub-facts">
+      <li><span class="fact-key">{{ 'Ticket' if booking.quantity == 1 else 'Tickets' }}</span><span class="fact-val">{{ booking.quantity }}</span></li>
+      <li><span class="fact-key">Price per ticket</span><span class="fact-val">{{ booking.price_per_ticket|money }}</span></li>
+      <li><span class="fact-key">{{ 'Refunded' if event.status == 'Cancelled' else 'Total paid' }}</span><span class="fact-val">{{ booking.total_price|money }}</span></li>
+    </ul>
+
+    {% if event.status == 'Cancelled' %}
+    <p class="stub-note mb-0">Cancelled by the organiser. Your {{ booking.total_price|money }} has been refunded.</p>
+    {% elif event.status == 'Inactive' %}
+    <p class="stub-note mb-0">This gig has finished. Your order is kept here for your records.</p>
+    {% endif %}
+  </div>
+  <div class="stub-tear">
+    <p class="meta mb-1">Order ID</p>
+    <p class="order-id mb-3"><a href="{{ url_for('main.booking_success', booking_id=booking.id) }}">{{ booking.order_id }}</a></p>
+    <p class="meta mb-1">Booked</p>
+    <p class="mb-0">{{ booking.booked_at|local_time }}</p>
+  </div>
+</article>
+{% endmacro %}
+
 {% block content %}
 <main class="container py-4">
 
   <h1 style="font-size:clamp(2rem,6vw,3rem);">My tickets</h1>
-  <p class="meta mb-4">{{ bookings|length }} {{ 'order' if bookings|length == 1 else 'orders' }} · {{ current_user.first_name }}</p>
+  <p class="meta mb-4">{{ order_count }} {{ 'order' if order_count == 1 else 'orders' }} · {{ current_user.first_name }}</p>
 
-  {% if bookings %}
+  {% if order_count %}
   <div class="row">
     <div class="col-12 col-xl-10">
 
-      <!-- US11: newest first, so an order placed a moment ago is at the top.
-           The status badge is the event's live status, so a gig cancelled
-           after booking shows as Cancelled here too. -->
-      {% for booking in bookings %}
-      {% set event = booking.event %}
-      <article class="stub">
-        <img src="{{ url_for('static', filename=event.image_filename) }}" class="stub-img" alt="Poster for {{ event.title }} at {{ event.venue_name }}">
-        <div class="stub-body">
-          <span class="status status-{{ event.status|lower|replace(' ', '') }}">{{ event.status }}</span>
-          <h2 class="h4 mt-2 mb-1"><a class="stub-title" href="{{ url_for('main.event_detail', event_id=event.id) }}">{{ event.title }}</a></h2>
-          <p class="meta mb-2">{{ event.event_date.strftime('%a %d %b %Y') }} · {{ event.venue_name }}</p>
-          <p class="mb-0">{{ booking.quantity }} {{ 'ticket' if booking.quantity == 1 else 'tickets' }} · ${{ '%.2f'|format(booking.total_price) }}{% if event.status == 'Cancelled' %} refunded{% endif %}</p>
+      <!-- US11: soonest gig first, so the next night out is at the top. -->
+      {% if upcoming %}
+      <section aria-labelledby="upcoming-heading" class="mb-4">
+        <div class="rule-heading mt-0 mb-3">
+          <h2 id="upcoming-heading">Upcoming ({{ upcoming|length }})</h2>
         </div>
-        <div class="stub-tear">
-          <p class="meta mb-1">Order ID</p>
-          <p class="order-id mb-3"><a href="{{ url_for('main.booking_success', booking_id=booking.id) }}">{{ booking.order_id }}</a></p>
-          <p class="meta mb-1">Booked</p>
-          <p class="mb-0">{{ booking.booked_at|local_time }}</p>
+        {% for booking in upcoming %}{{ stub(booking) }}{% endfor %}
+      </section>
+      {% endif %}
+
+      <!-- Cancelled orders stay listed (US11 AC3), most recent gig first. -->
+      {% if finished %}
+      <section aria-labelledby="finished-heading">
+        <div class="rule-heading{% if not upcoming %} mt-0{% endif %} mb-3">
+          <h2 id="finished-heading">Past and cancelled ({{ finished|length }})</h2>
         </div>
-      </article>
-      {% endfor %}
+        {% for booking in finished %}{{ stub(booking) }}{% endfor %}
+      </section>
+      {% endif %}
 
     </div>
   </div>
@@ -44,7 +78,7 @@
     <div class="col-md-10 col-lg-7">
       <div class="panel booking-panel p-4">
         <h2 class="h4">No tickets yet</h2>
-        <p>When you book a gig, the order and its order ID will show up here, so you always know where to find them.</p>
+        <p>You haven't booked any gigs yet. Once you do, every order lands here with its order ID, price and booking time, so you can keep track of what's coming up.</p>
         <a href="{{ url_for('main.index') }}" class="btn btn-ink">Find a gig</a>
       </div>
     </div>
