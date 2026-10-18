@@ -99,7 +99,8 @@
 
     </div>
 
-    <!-- Right: booking. Wired up in Sprint 2 (US8). -->
+    <!-- Right: booking (US8). The /book routes enforce the same Open rule,
+         so these branches are for clarity, not security. -->
     <div class="col-lg-4">
       <div class="booking-box">
         <p class="meta mb-1">General admission</p>
@@ -107,8 +108,14 @@
         <p class="meta mb-3">{{ event.tickets_remaining }} of {{ event.tickets_total }} tickets remaining</p>
 
         {% if event.status == 'Open' %}
-        <button type="button" class="btn btn-ink w-100" disabled>Book tickets</button>
-        <p class="form-text mt-2 mb-0">Booking arrives with issue #8.</p>
+          {% if current_user.is_authenticated %}
+        <a class="btn btn-ink w-100" href="{{ url_for('main.book_event', event_id=event.id) }}">Book tickets</a>
+          {% else %}
+        <!-- next= points at this page, not /book, so after logging in the
+             visitor lands back on the gig they were reading. -->
+        <a class="btn btn-ink w-100" href="{{ url_for('auth.login', next=url_for('main.event_detail', event_id=event.id)) }}">Log in to book</a>
+        <p class="form-text mt-2 mb-0">New to Amplifi? <a href="{{ url_for('auth.register', next=url_for('main.event_detail', event_id=event.id)) }}">Create an account</a> to book tickets.</p>
+          {% endif %}
         {% elif event.status == 'Sold Out' %}
         <p class="status status-soldout d-block text-center">Sold out</p>
         <p class="form-text mt-2 mb-0">No tickets left for this gig.</p>

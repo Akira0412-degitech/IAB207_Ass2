@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}Confirm your booking for {{ event.title }} — Amplifi{% endblock %}
+
+{% block content %}
+<main class="container py-4">
+
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb meta">
+      <li class="breadcrumb-item"><a href="{{ url_for('main.index') }}">Gigs</a></li>
+      <li class="breadcrumb-item"><a href="{{ url_for('main.event_detail', event_id=event.id) }}">{{ event.title }}</a></li>
+      <li class="breadcrumb-item active" aria-current="page">Confirm booking</li>
+    </ol>
+  </nav>
+
+  <div class="row justify-content-center">
+    <div class="col-md-10 col-lg-7">
+
+      <p class="meta mb-1">Step 2 of 2 · Review and confirm</p>
+      <h1 style="font-size:clamp(2rem,6vw,3rem);">Confirm your booking</h1>
+      <p class="meta mb-4">Check the details below. Nothing is booked until you press Confirm.</p>
+
+      <!-- US8: price and total come from the server, worked out from the event,
+           so what is shown here is exactly what the confirm route will save. -->
+      <div class="panel booking-panel p-4">
+        <ul class="fact-list mb-3">
+          <li><span class="fact-key">Gig</span><span class="fact-val">{{ event.title }}</span></li>
+          <li><span class="fact-key">Date</span><span class="fact-val">{{ event.event_date.strftime('%A %d %B %Y') }}</span></li>
+          <li><span class="fact-key">Venue</span><span class="fact-val">{{ event.venue_name }}{% if event.venue_address %}, {{ event.venue_address }}{% endif %}</span></li>
+          <li><span class="fact-key">Price per ticket</span><span class="fact-val">${{ '%.2f'|format(event.ticket_price) }}</span></li>
+          <li><span class="fact-key">Quantity</span><span class="fact-val">{{ quantity }}</span></li>
+        </ul>
+
+        <div class="booking-total d-flex justify-content-between align-items-baseline gap-3">
+          <span class="meta">Total</span>
+          <span class="price">${{ '%.2f'|format(total) }}</span>
+        </div>
+
+        <!-- Only the quantity is posted; the confirm route re-validates it and
+             re-checks stock, because tickets may sell out in the meantime. -->
+        <form method="post" action="{{ url_for('main.book_confirm', event_id=event.id) }}" class="mt-4">
+          {{ form.hidden_tag() }}
+          <input type="hidden" name="quantity" value="{{ quantity }}">
+          <div class="d-grid gap-2 d-sm-flex align-items-sm-center">
+            <button type="submit" class="btn btn-ink">Confirm booking</button>
+            <a class="btn btn-outline-ink" href="{{ url_for('main.book_event', event_id=event.id, quantity=quantity) }}">Change quantity</a>
+            <a class="ms-sm-auto text-center" href="{{ url_for('main.event_detail', event_id=event.id) }}">Cancel</a>
+          </div>
+        </form>
+      </div>
+
+      <p class="form-text mt-3 mb-0">If someone else books the last tickets before you confirm, we'll tell you how many are left and nothing will be booked.</p>
+
+    </div>
+  </div>
+
+</main>
+{% endblock %}

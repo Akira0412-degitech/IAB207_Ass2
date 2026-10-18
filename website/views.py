@@ -1,8 +1,8 @@
-from flask import Blueprint, render_template, request
-from flask_login import login_required
+from flask import Blueprint, render_template, request, flash, redirect, url_for
+from flask_login import login_required, current_user
 
-from .models import Event, Comment
-from .forms import EventForm
+from .models import Event, Comment, Booking
+from .forms import EventForm, BookingForm
 from . import db
 
 main_bp = Blueprint('main', __name__)
@@ -78,6 +78,122 @@ def event_detail(event_id):
     ).all()
 
     return render_template('event.html', event=event, comments=comments)
+
+
+# US8 - why each non-Open status blocks booking, worded for the flash message.
+CLOSED_REASONS = {
+    'Sold Out': 'it is Sold Out',
+    'Cancelled': 'it has been cancelled',
+    'Inactive': 'it has already taken place',
+}
+
+
+def _refuse_if_not_open(event):
+    """US8 - the server-side gate for booking.
+
+    Hiding the button on the event page is not enough: anyone can type the
+    /book URL or POST to /book/confirm directly. Both booking routes call
+    this first and return its redirect when the gig is not Open.
+    """
+    if event.status == 'Open':
+        return None
+    flash('Tickets for this gig are no longer available: {}.'.format(
+        CLOSED_REASONS.get(event.status, 'it is not open for booking')))
+    return redirect(url_for('main.event_detail', event_id=event.id))
+
+
+def _has_enough_tickets(form, event):
+    """US9 - refuse a quantity larger than what is left.
+
+    The message goes into quantity.errors rather than a flash so it sits
+    next to the number the user typed, and that number stays in the box
+    for them to lower.
+    """
+    remaining = event.tickets_remaining
+    if form.quantity.data <= remaining:
+        return True
+    if remaining == 1:
+        left = 'Only 1 ticket is left'
+    else:
+        left = 'Only {} tickets are left'.format(remaining)
+    form.quantity.errors.append(
+        '{} for this gig. Lower the quantity and try again.'.format(left))
+    return False
+
+
+@main_bp.route('/event/<int:event_id>/book', methods=['GET', 'POST'])
+@login_required
+def book_event(event_id):
+    """US8, US9 - step 1 of booking: choose a quantity, then review it.
+
+    No JavaScript is allowed, so the confirmation step is a second server
+    round trip: a valid POST here only renders the summary page, and
+    nothing is saved until that page is submitted to book_confirm.
+    """
+    event = db.get_or_404(Event, event_id)
+    refused = _refuse_if_not_open(event)
+    if refused:
+        return refused
+
+    if request.method == 'GET':
+        # "Change quantity" on the summary page links back with ?quantity=n.
+        # type=int turns junk into None, so a hand-edited URL is ignored.
+        requested = request.args.get('quantity', type=int)
+        form = BookingForm(quantity=requested if requested and requested > 0 else 1)
+        return render_template('booking.html', event=event, form=form)
+
+    form = BookingForm()
+    if form.validate_on_submit() and _has_enough_tickets(form, event):
+        return render_template(
+            'booking_confirm.html',
+            event=event,
+            form=form,
+            quantity=form.quantity.data,
+            total=event.ticket_price * form.quantity.data,
+        )
+
+    return render_template('booking.html', event=event, form=form)
+
+
+@main_bp.route('/event/<int:event_id>/book/confirm', methods=['POST'])
+@login_required
+def book_confirm(event_id):
+    """US8, US9 - step 2 of booking: place the order.
+
+    The quantity arrives from a hidden field the user could have edited, so
+    it goes back through the same BookingForm (CSRF and validators) and the
+    stock is checked again: someone else may have bought the last tickets
+    while this user was reading the summary.
+    """
+    event = db.get_or_404(Event, event_id)
+    refused = _refuse_if_not_open(event)
+    if refused:
+        return refused
+
+    form = BookingForm()
+    if not (form.validate_on_submit() and _has_enough_tickets(form, event)):
+        return render_template('booking.html', event=event, form=form)
+
+    # The price is snapshotted from the event, never taken from the form, so
+    # a later price change or a tampered request cannot alter what was paid.
+    booking = Booking(
+        user_id=current_user.id,
+        event_id=event.id,
+        quantity=form.quantity.data,
+        price_per_ticket=event.ticket_price,
+    )
+    db.session.add(booking)
+    db.session.commit()
+
+    # Post/Redirect/Get: rendering a page from this POST would let a refresh
+    # place the same order twice.
+    flash("You're going! {} {} booked for {}. Order ID: {}".format(
+        booking.quantity,
+        'ticket' if booking.quantity == 1 else 'tickets',
+        event.title,
+        booking.order_id,
+    ))
+    return redirect(url_for('main.event_detail', event_id=event.id))
 
 
 @main_bp.route('/create', methods=['GET'])
