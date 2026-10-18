@@ -555,3 +555,73 @@ fieldset.panel legend {
     aspect-ratio: 4 / 3;
   }
 }
+
+/* ---------- AI vibe search (US4) ---------- */
+
+/* Riso blue marks everything the AI produced: the button that asks for it,
+   the section it fills and the cards it picks. Keyword results stay in the
+   site's ink, so the two can be told apart at a glance (AC3). */
+.btn-ai,
+.btn-ai:focus {
+  background: var(--riso-blue);
+  color: var(--paper);
+  border: 2px solid var(--riso-blue);
+  border-radius: 0;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.8125rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0.6rem 1.4rem;
+}
+
+.btn-ai:hover {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--paper);
+}
+
+/* Its own tinted panel with a heavy blue rule, in place of the ink
+   rule-heading the keyword listing uses. */
+.ai-picks {
+  background: #e6e9ff;
+  border: 2px solid var(--riso-blue);
+  border-top-width: 6px;
+  padding: 1.25rem;
+  margin-top: 2.5rem;
+}
+
+.ai-picks h2 {
+  font-size: 1.5rem;
+  margin: 0;
+  color: var(--riso-blue);
+  overflow-wrap: anywhere;
+}
+
+.gig-card.ai-pick { border-color: var(--riso-blue); }
+.gig-card.ai-pick .card-img-top { border-bottom-color: var(--riso-blue); }
+.gig-card.ai-pick:hover { box-shadow: 6px 6px 0 var(--riso-pink); }
+
+/* Sits beside the status stamp and copies its shape, so a card reads
+   "Open · AI match 62%" as two labels of the same kind. Paper on riso blue
+   is about 5.5:1, which passes WCAG AA at this size. */
+.ai-badge {
+  display: inline-block;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 0.25rem 0.6rem;
+  border: 2px solid var(--riso-blue);
+  border-radius: 0;
+  color: var(--paper);
+  background: var(--riso-blue);
+}
+
+/* On phones the full button padding pushes "AI vibe search" onto its own
+   line; trimming it keeps both buttons side by side at 390px. Scoped to the
+   search form so buttons elsewhere on the site are unchanged. */
+@media (max-width: 575.98px) {
+  form[role="search"] .btn { padding-inline: 0.9rem; }
+  .ai-picks { padding: 1rem; }
+}

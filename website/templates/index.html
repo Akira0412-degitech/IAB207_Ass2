@@ -23,11 +23,57 @@
 {% endblock %}
 
 {% block content %}
+{#- One card for both the main listing and the US4 AI picks, so the two
+    cannot drift apart. score is only passed for AI picks: it adds the
+    ai-pick modifier class and the "AI match" badge. -#}
+{% macro gig_card(event, score=none) %}
+<div class="col">
+  <a class="card-link-plain" href="{{ url_for('main.event_detail', event_id=event.id) }}">
+    <article class="card gig-card{% if score is not none %} ai-pick{% endif %}{% if event.status == 'Cancelled' %} is-cancelled{% elif event.status == 'Inactive' %} is-past{% endif %}">
+      <!-- image_filename is stored relative to static/, so seeded
+           posters and user uploads both resolve the same way. -->
+      <img src="{{ url_for('static', filename=event.image_filename) }}"
+           class="card-img-top"
+           alt="Poster for {{ event.title }} at {{ event.venue_name }}">
+      <div class="card-body">
+        <!-- 'Sold Out' becomes status-soldout, matching the CSS classes. -->
+        <span class="status status-{{ event.status|lower|replace(' ', '') }}">{{ event.status }}</span>
+        {% if score is not none %}
+        <!-- US4: the badge is text, not just a colour, so the AI pick is
+             distinguishable for colour-blind and screen reader users. -->
+        <span class="ai-badge">AI match · {{ (score * 100)|round|int }}%</span>
+        {% endif %}
+        <h3 class="card-title mt-2">{{ event.title }}</h3>
+        <p class="meta mb-2">{{ event.genre }} · {{ event.age_restriction }}</p>
+        <p class="mb-2">{{ event.description[:90] }}{% if event.description|length > 90 %}…{% endif %}</p>
+        <p class="meta mb-0">{{ event.event_date.strftime('%a %d %b') }} · {{ event.venue_name }}</p>
+        <p class="meta mb-0">
+          ${{ '%.2f'|format(event.ticket_price) }}
+          {% if event.status == 'Cancelled' %}
+          · Refunds issued
+          {% elif event.status == 'Inactive' %}
+          · Event finished
+          {% else %}
+          · {{ event.tickets_remaining }} ticket{{ '' if event.tickets_remaining == 1 else 's' }} left
+          {% endif %}
+        </p>
+      </div>
+    </article>
+  </a>
+</div>
+{% endmacro %}
+
+{#- In AI mode q is a description, not a keyword, so the main listing is
+    not filtered by it and must not say "matching ...". -#}
+{% set keyword_q = q if mode == 'keyword' else '' %}
+{#- Only carried in links when it is 'ai', so keyword URLs stay as before. -#}
+{% set ai_mode = 'ai' if mode == 'ai' else none %}
+
 <main class="container">
 
   <!-- US2: genre chips are plain links carrying ?genre=, and each one also
-       carries the current search term so changing genre does not throw the
-       keyword away. No JavaScript involved. -->
+       carries the current search term and mode, so changing genre keeps the
+       keyword or AI search. No JavaScript involved. -->
   <section aria-labelledby="genres-heading">
     <div class="rule-heading d-flex flex-wrap justify-content-between align-items-baseline gap-2">
       <h2 id="genres-heading">Browse by genre</h2>
@@ -36,82 +82,90 @@
 
     <nav class="d-flex flex-wrap gap-2 mt-3" aria-label="Filter gigs by genre">
       <a class="btn genre-chip{% if genre == 'all' %} active{% endif %}"
-         href="{{ url_for('main.index', q=q or None) }}">All gigs</a>
+         href="{{ url_for('main.index', q=q or None, mode=ai_mode) }}">All gigs</a>
       {% for g in genres %}
       <a class="btn genre-chip{% if genre == g %} active{% endif %}"
-         href="{{ url_for('main.index', genre=g, q=q or None) }}">{{ g }}</a>
+         href="{{ url_for('main.index', genre=g, q=q or None, mode=ai_mode) }}">{{ g }}</a>
       {% endfor %}
     </nav>
 
-    <!-- US3: a plain GET form. The hidden genre field is the mirror of the
-         q=q above, so searching keeps whichever genre is selected. -->
+    <!-- US3, US4: a plain GET form. The hidden genre field is the mirror of
+         the q=q above, so searching keeps whichever genre is selected. The
+         two submit buttons share name="mode", so the button pressed decides
+         keyword or AI search with no JavaScript. Pressing Enter submits the
+         first button, so the default stays a keyword search. -->
     <form class="row g-2 mt-3" method="get" action="{{ url_for('main.index') }}" role="search">
       <input type="hidden" name="genre" value="{{ genre }}">
-      <div class="col-12 col-sm-8 col-md-6">
+      <div class="col-12 col-md-6">
         <label for="q" class="visually-hidden">Search gigs</label>
         <input type="search" class="form-control" id="q" name="q" value="{{ q }}"
-               placeholder="Search by band, venue or gig title">
+               placeholder="Search a band or venue, or describe the night you're after"
+               aria-describedby="search-hint">
       </div>
       <div class="col-auto">
-        <button type="submit" class="btn btn-ink">Search</button>
+        <button type="submit" name="mode" value="keyword" class="btn btn-ink">Search</button>
+      </div>
+      <div class="col-auto">
+        <button type="submit" name="mode" value="ai" class="btn btn-ai">AI vibe search</button>
       </div>
       {% if q or genre != 'all' %}
       <div class="col-auto">
         <a href="{{ url_for('main.index') }}" class="btn btn-outline-ink">Clear</a>
       </div>
       {% endif %}
+      <p id="search-hint" class="form-text col-12 mb-0">
+        AI vibe search matches gigs by meaning. Try: chill acoustic night, all-ages dance party.
+      </p>
     </form>
   </section>
+
+  {% if mode == 'ai' and q %}
+  <!-- US4: AI picks get their own tinted, blue-ruled section above the
+       listing, so they are never mistaken for keyword results. -->
+  <section class="ai-picks" aria-labelledby="ai-picks-heading">
+    <div class="d-flex flex-wrap justify-content-between align-items-baseline gap-2">
+      <h2 id="ai-picks-heading">AI picks for “{{ q }}”</h2>
+      <span class="meta">Matched by meaning, not exact words</span>
+    </div>
+
+    {% if ai_error %}
+    <!-- The model could not load (no internet on first run, or the package
+         is missing). A notice, not an error: the full listing is below. -->
+    <p class="mt-3 mb-0">AI search is warming up or unavailable right now. Showing all gigs instead.</p>
+    {% elif ai_results %}
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 g-4 mt-1">
+      {% for event, score in ai_results %}
+      {{ gig_card(event, score) }}
+      {% endfor %}
+    </div>
+    {% else %}
+    <!-- Nothing scored above the threshold: a normal outcome, not an error. -->
+    <p class="mt-3 mb-0">No gigs match that vibe yet. Try different words, or browse by genre below.</p>
+    {% endif %}
+  </section>
+  {% endif %}
 
   <!-- Gig listing: every card below is generated from the database. -->
   <section aria-labelledby="whats-on-heading" id="whats-on">
     <div class="rule-heading d-flex flex-wrap justify-content-between align-items-baseline gap-2">
       <h2 id="whats-on-heading">
-        {% if genre != 'all' %}{{ genre }}{% else %}What's on{% endif %}
+        {% if genre != 'all' %}{{ genre }}{% elif mode == 'ai' and q %}All gigs{% else %}What's on{% endif %}
       </h2>
-      <span class="meta">{{ events|length }} gig{{ '' if events|length == 1 else 's' }}{% if q %} matching "{{ q }}"{% endif %}</span>
+      <span class="meta">{{ events|length }} gig{{ '' if events|length == 1 else 's' }}{% if keyword_q %} matching "{{ keyword_q }}"{% endif %}</span>
     </div>
 
     <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 g-4 mt-1">
 
       {% for event in events %}
-      <div class="col">
-        <a class="card-link-plain" href="{{ url_for('main.event_detail', event_id=event.id) }}">
-          <article class="card gig-card{% if event.status == 'Cancelled' %} is-cancelled{% elif event.status == 'Inactive' %} is-past{% endif %}">
-            <!-- image_filename is stored relative to static/, so seeded
-                 posters and user uploads both resolve the same way. -->
-            <img src="{{ url_for('static', filename=event.image_filename) }}"
-                 class="card-img-top"
-                 alt="Poster for {{ event.title }} at {{ event.venue_name }}">
-            <div class="card-body">
-              <!-- 'Sold Out' becomes status-soldout, matching the CSS classes. -->
-              <span class="status status-{{ event.status|lower|replace(' ', '') }}">{{ event.status }}</span>
-              <h3 class="card-title mt-2">{{ event.title }}</h3>
-              <p class="meta mb-2">{{ event.genre }} · {{ event.age_restriction }}</p>
-              <p class="mb-2">{{ event.description[:90] }}{% if event.description|length > 90 %}…{% endif %}</p>
-              <p class="meta mb-0">{{ event.event_date.strftime('%a %d %b') }} · {{ event.venue_name }}</p>
-              <p class="meta mb-0">
-                ${{ '%.2f'|format(event.ticket_price) }}
-                {% if event.status == 'Cancelled' %}
-                · Refunds issued
-                {% elif event.status == 'Inactive' %}
-                · Event finished
-                {% else %}
-                · {{ event.tickets_remaining }} ticket{{ '' if event.tickets_remaining == 1 else 's' }} left
-                {% endif %}
-              </p>
-            </div>
-          </article>
-        </a>
-      </div>
+      {{ gig_card(event) }}
       {% else %}
       <!-- Jinja runs this branch when the loop has nothing to iterate over.
            US2 and US3 both require a message here rather than a blank grid. -->
       <div class="col-12">
-        {% if q or genre != 'all' %}
+        {% if keyword_q or genre != 'all' %}
         <p class="mb-2">No gigs match
-          {%- if q %} “{{ q }}”{% endif %}
-          {%- if q and genre != 'all' %} in{% endif %}
+          {%- if keyword_q %} “{{ keyword_q }}”{% endif %}
+          {%- if keyword_q and genre != 'all' %} in{% endif %}
           {%- if genre != 'all' %} {{ genre }}{% endif %}.
         </p>
         <a href="{{ url_for('main.index') }}" class="btn btn-outline-ink">Show all gigs</a>
