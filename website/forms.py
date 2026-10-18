@@ -1,7 +1,8 @@
 from flask_wtf import FlaskForm
 from wtforms.fields import (SubmitField, StringField, PasswordField,
-                            RadioField, TextAreaField)
-from wtforms.validators import InputRequired, Email, EqualTo, Length, Regexp
+                            RadioField, TextAreaField, IntegerField)
+from wtforms.validators import (InputRequired, Email, EqualTo, Length, Regexp,
+                                NumberRange, StopValidation)
 from wtforms import ValidationError
  
 from .models import User
@@ -110,3 +111,44 @@ class EventForm(FlaskForm):
             raise ValidationError('Name the Traditional Custodians you entered '
                                   'above in your statement')
         # TODO(#14): also require the venue name/suburb once those fields exist
+
+
+class TicketQuantityField(IntegerField):
+    """US8 - an IntegerField whose errors read like the rest of the site.
+
+    IntegerField still does the real work of rejecting decimals and text;
+    this only swaps its generic "Not a valid integer value." for plain
+    English, and stops there so NumberRange does not pile a second,
+    contradictory message on top of the same bad input.
+    """
+
+    def process_formdata(self, valuelist):
+        # A blank box is left for InputRequired to report, otherwise the
+        # user would see "whole number" when they simply typed nothing.
+        if valuelist and not valuelist[0].strip():
+            self.data = None
+            return
+        try:
+            super().process_formdata(valuelist)
+        except ValueError:
+            raise ValueError('Enter the number of tickets as a whole number, like 2')
+
+    def pre_validate(self, form):
+        if self.process_errors:
+            raise StopValidation()
+
+
+class BookingForm(FlaskForm):
+    """US8, US9 - choose how many tickets to book for one gig.
+
+    Only the quantity's shape is checked here. Whether that many tickets
+    are still left depends on the event, so the view runs that check and
+    adds its message to quantity.errors so it shows inline like the rest.
+    """
+
+    # min/step are only a browser hint; the validators are the real check.
+    quantity = TicketQuantityField("Number of tickets", validators=[
+        InputRequired('Enter how many tickets you want'),
+        NumberRange(min=1, message='Book at least 1 ticket'),
+    ], render_kw={'min': 1, 'step': 1})
+    submit = SubmitField("Review booking")
