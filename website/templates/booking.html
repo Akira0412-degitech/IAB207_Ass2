@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% from "bootstrap5/form.html" import render_form %}
+
+{% block title %}Book tickets for {{ event.title }} — Amplifi{% endblock %}
+
+{% block content %}
+<main class="container py-4">
+
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb meta">
+      <li class="breadcrumb-item"><a href="{{ url_for('main.index') }}">Gigs</a></li>
+      <li class="breadcrumb-item"><a href="{{ url_for('main.event_detail', event_id=event.id) }}">{{ event.title }}</a></li>
+      <li class="breadcrumb-item active" aria-current="page">Book tickets</li>
+    </ol>
+  </nav>
+
+  <div class="row g-4 g-lg-5">
+
+    <!-- Left: US8 quantity form. US9 stock errors render inline on the field. -->
+    <div class="col-lg-7">
+      <p class="meta mb-1">Step 1 of 2 · Choose your tickets</p>
+      <h1 style="font-size:clamp(2rem,6vw,3rem);">Book tickets</h1>
+      <p class="meta mb-4">{{ event.title }} · {{ event.venue_name }}</p>
+
+      <div class="panel booking-panel p-4">
+        {{ render_form(form, action=url_for('main.book_event', event_id=event.id), button_map={'submit': 'ink'}) }}
+        <p class="form-text mt-3 mb-0">You'll see the full price on the next page before anything is booked.</p>
+      </div>
+
+      <p class="mt-3 mb-0"><a href="{{ url_for('main.event_detail', event_id=event.id) }}">Back to gig</a></p>
+    </div>
+
+    <!-- Right: what the user is booking, so they never have to go back to check. -->
+    <div class="col-lg-5">
+      <div class="booking-box">
+        <p class="meta mb-1">General admission</p>
+        <p class="price mb-3">${{ '%.2f'|format(event.ticket_price) }}</p>
+        <ul class="fact-list">
+          <li><span class="fact-key">Gig</span><span class="fact-val">{{ event.title }}</span></li>
+          <li><span class="fact-key">Date</span><span class="fact-val">{{ event.event_date.strftime('%A %d %B %Y') }}</span></li>
+          <li><span class="fact-key">Venue</span><span class="fact-val">{{ event.venue_name }}</span></li>
+          <li><span class="fact-key">Price per ticket</span><span class="fact-val">${{ '%.2f'|format(event.ticket_price) }}</span></li>
+          <li><span class="fact-key">Tickets remaining</span><span class="fact-val">{{ event.tickets_remaining }} of {{ event.tickets_total }}</span></li>
+        </ul>
+      </div>
+    </div>
+
+  </div>
+</main>
+{% endblock %}

@@ -65,9 +65,8 @@
         <li><span class="fact-key">Tickets remaining</span><span class="fact-val">{{ event.tickets_remaining }} of {{ event.tickets_total }}</span></li>
       </ul>
 
-      <!-- US5/US13: an enhanced Acknowledgement shows the creator's own
-           wording verbatim, which is what the guidance on the create form
-           promises. Generic shows a standard statement, none shows nothing. -->
+      <!-- US5: the Acknowledgement is only shown when the creator chose one.
+           US13: an enhanced one is the creator's own statement, shown as written. -->
       {% if event.aoc_type == 'enhanced' and event.aoc_statement %}
       <div class="aoc mb-4">
         <p class="meta mb-2">Acknowledgement of Country</p>
@@ -120,7 +119,9 @@
 
     </div>
 
-    <!-- Right: booking, plus the creator's own controls. -->
+    <!-- Right: booking (US8), plus the creator's own controls (US14).
+         The /book routes enforce the same Open rule and both US14 routes
+         re-check ownership, so these branches are for clarity, not security. -->
     <div class="col-lg-4">
       <div class="booking-box">
         <p class="meta mb-1">General admission</p>
@@ -128,8 +129,14 @@
         <p class="meta mb-3">{{ event.tickets_remaining }} of {{ event.tickets_total }} tickets remaining</p>
 
         {% if event.status == 'Open' %}
-        <button type="button" class="btn btn-ink w-100" disabled>Book tickets</button>
-        <p class="form-text mt-2 mb-0">Booking arrives with US8.</p>
+          {% if current_user.is_authenticated %}
+        <a class="btn btn-ink w-100" href="{{ url_for('main.book_event', event_id=event.id) }}">Book tickets</a>
+          {% else %}
+        <!-- next= points at this page, not /book, so after logging in the
+             visitor lands back on the gig they were reading. -->
+        <a class="btn btn-ink w-100" href="{{ url_for('auth.login', next=url_for('main.event_detail', event_id=event.id)) }}">Log in to book</a>
+        <p class="form-text mt-2 mb-0">New to Amplifi? <a href="{{ url_for('auth.register', next=url_for('main.event_detail', event_id=event.id)) }}">Create an account</a> to book tickets.</p>
+          {% endif %}
         {% elif event.status == 'Sold Out' %}
         <p class="status status-soldout d-block text-center">Sold out</p>
         <p class="form-text mt-2 mb-0">No tickets left for this gig.</p>
