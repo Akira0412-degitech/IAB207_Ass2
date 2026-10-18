@@ -27,3 +27,8 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Uploaded event posters. The seeded images in static/img are committed,
+# but anything a user uploads through the create/edit form is local test
+# data and would otherwise land in everyone's working tree.
+website/static/img/uploads/
