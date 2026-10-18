@@ -473,3 +473,18 @@ fieldset.panel legend {
   margin-bottom: 0.25rem;
   letter-spacing: 0.02em;
 }
+
+/* ---------- Booking (US8) ---------- */
+
+/* Only fieldset.panel is styled above, so the booking steps get their own
+   class rather than restyling every div.panel on the site. */
+.booking-panel {
+  border: 2px solid var(--ink);
+  background: var(--paper-2);
+}
+
+/* The total is the figure the user is agreeing to, so it gets the heavy rule. */
+.booking-total {
+  border-top: 4px solid var(--rule);
+  padding-top: 0.75rem;
+}
