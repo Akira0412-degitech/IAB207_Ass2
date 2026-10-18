@@ -11,6 +11,7 @@ from .models import Event, Comment, Booking
 from .forms import (EventForm, EventEditForm, CancelForm, CommentForm,
                     BookingForm, GENRES)
 from . import db
+from .ai_search import semantic_search, AISearchUnavailable
 
 main_bp = Blueprint('main', __name__)
 
@@ -138,15 +139,25 @@ def _has_enough_tickets(form, event):
 
 @main_bp.route('/')
 def index():
-    """US1, US2, US3 - landing page.
+    """US1, US2, US3, US4 - landing page.
 
-    One route handles all three stories: it lists every gig, and narrows
+    One route handles all four stories: it lists every gig, and narrows
     that list by genre and/or keyword when those query parameters are
-    present. Keeping them together is what lets the two filters combine,
+    present. Keeping them together is what lets the filters combine,
     e.g. /?genre=Electronic&q=burleigh
+
+    US4 - with mode=ai the search box is a description of the night the
+    visitor wants rather than a keyword. The listing is then left unfiltered
+    by q (a vibe like "chill acoustic night" would keyword-match nothing),
+    and a separate set of AI picks is shown above it.
     """
     genre = request.args.get('genre', 'all')
     q = request.args.get('q', '').strip()
+    # Anything other than 'ai', including a hand-edited URL, is a keyword
+    # search, so the default behaviour is exactly what US3 shipped.
+    mode = request.args.get('mode', 'keyword')
+    if mode != 'ai':
+        mode = 'keyword'
 
     query = db.select(Event)
 
@@ -156,7 +167,7 @@ def index():
 
     # US3 - case-insensitive keyword match. The lineup is stored as three
     # flat columns rather than a related table, so each is searched in turn.
-    if q:
+    if q and mode == 'keyword':
         like = '%{}%'.format(q)
         query = query.where(db.or_(
             Event.title.ilike(like),
@@ -168,12 +179,31 @@ def index():
 
     events = db.session.scalars(query.order_by(Event.event_date)).all()
 
+    ai_results = []
+    ai_error = False
+    if mode == 'ai' and q:
+        # Only gigs a visitor could still go to. Recommending a cancelled or
+        # finished gig is a bad discovery result, so those are left out.
+        # Sold Out stays in: it still answers the question, and the card
+        # says it is sold out. events already respects the genre chip, so
+        # AI search narrows within a genre just as keyword search does.
+        candidates = [e for e in events if e.status in ('Open', 'Sold Out')]
+        try:
+            ai_results = semantic_search(q, candidates)
+        except AISearchUnavailable:
+            # Already logged in ai_search; the page falls back to the full
+            # listing with a notice instead of an error.
+            ai_error = True
+
     return render_template(
         'index.html',
         events=events,
         genres=GENRES,
         genre=genre,
         q=q,
+        mode=mode,
+        ai_results=ai_results,
+        ai_error=ai_error,
     )
 
 
