@@ -488,3 +488,30 @@ fieldset.panel legend {
   border-top: 4px solid var(--rule);
   padding-top: 0.75rem;
 }
+
+/* ---------- Order confirmation and history (US10, US11) ---------- */
+
+/* The order ID is what the user will quote later, so on the confirmation
+   page it is set large and boxed off, in the same pink as the AoC rule. */
+.booking-ref {
+  border-left: 6px solid var(--riso-pink);
+  background: var(--paper);
+  padding: 0.9rem 1.1rem;
+}
+
+.order-id-lg { font-size: clamp(1.25rem, 5vw, 1.6rem); }
+
+.booking-notice {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+/* Stub titles are links but should still read as headings, not body links. */
+.stub-title {
+  color: inherit;
+  text-decoration: none;
+}
+
+.stub-title:hover { color: var(--riso-blue); }

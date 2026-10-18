@@ -1,5 +1,6 @@
 import os
 import uuid
+from datetime import timedelta
 
 from flask import (Blueprint, render_template, request, redirect, url_for,
                    flash, current_app, abort)
@@ -12,6 +13,30 @@ from .forms import (EventForm, EventEditForm, CancelForm, CommentForm,
 from . import db
 
 main_bp = Blueprint('main', __name__)
+
+# Queensland does not observe daylight saving, so Brisbane is UTC+10 all
+# year and a fixed offset is exact. zoneinfo is avoided on purpose: on
+# Windows it needs the extra tzdata package, which is not in requirements.txt.
+BRISBANE_OFFSET = timedelta(hours=10)
+
+
+@main_bp.app_template_filter('local_time')
+def local_time(value):
+    """US10, US11 - show a stored UTC time as Brisbane time.
+
+    Booking.booked_at is saved with datetime.utcnow, so printing it raw
+    would show a gig-goer a time ten hours behind the one on their phone.
+    Returns e.g. '18 Oct 2026, 9:42 pm'.
+    """
+    if value is None:
+        return ''
+    local = value + BRISBANE_OFFSET
+    # Built by hand because strftime's no-padding flags (%-d, %-I) are not
+    # supported on Windows.
+    return '{} {}, {}:{:02d} {}'.format(
+        local.day, local.strftime('%b %Y'),
+        local.hour % 12 or 12, local.minute,
+        'am' if local.hour < 12 else 'pm')
 
 
 def _save_poster(file_storage):
@@ -225,7 +250,7 @@ def book_event(event_id):
     return render_template('booking.html', event=event, form=form)
 
 
-@main_bp.route('/event/<int:event_id>/book/confirm', methods=['POST'])
+@main_bp.route('/event/<int:event_id>/book/confirm', methods=['GET', 'POST'])
 @login_required
 def book_confirm(event_id):
     """US8, US9 - step 2 of booking: place the order.
@@ -235,6 +260,12 @@ def book_confirm(event_id):
     stock is checked again: someone else may have bought the last tickets
     while this user was reading the summary.
     """
+    # If the session expires on the summary page, Flask-Login sends the user
+    # to /login?next=<this URL> and then GETs it after login. POST-only would
+    # show a raw 405 there; the quantity is gone anyway, so restart step 1.
+    if request.method == 'GET':
+        return redirect(url_for('main.book_event', event_id=event_id))
+
     event = db.get_or_404(Event, event_id)
     refused = _refuse_if_not_open(event)
     if refused:
@@ -255,15 +286,30 @@ def book_confirm(event_id):
     db.session.add(booking)
     db.session.commit()
 
-    # Post/Redirect/Get: rendering a page from this POST would let a refresh
-    # place the same order twice.
-    flash("You're going! {} {} booked for {}. Order ID: {}".format(
-        booking.quantity,
-        'ticket' if booking.quantity == 1 else 'tickets',
-        event.title,
-        booking.order_id,
-    ))
-    return redirect(url_for('main.event_detail', event_id=event.id))
+    # Post/Redirect/Get: rendering the confirmation from this POST would let
+    # a refresh place the same order twice. The confirmation page is a plain
+    # GET, so refreshing it only re-reads the saved order.
+    return redirect(url_for('main.booking_success', booking_id=booking.id))
+
+
+@main_bp.route('/bookings/<int:booking_id>')
+@login_required
+def booking_success(booking_id):
+    """US8, US10 - order confirmation for one booking.
+
+    Also the permanent page for that order, linked from the booking history,
+    so it reads the stored price snapshot rather than the event's current
+    price and stays correct if the creator later changes the price.
+    """
+    booking = db.get_or_404(Booking, booking_id)
+
+    # 404 rather than 403: order ids are sequential and easy to guess, so a
+    # stranger must not even learn that an order with this id exists.
+    if booking.user_id != current_user.id:
+        abort(404)
+
+    return render_template('booking_success.html', booking=booking,
+                           event=booking.event)
 
 
 @main_bp.route('/create', methods=['GET', 'POST'])
@@ -354,8 +400,18 @@ def cancel_event(event_id):
 @main_bp.route('/bookings')
 @login_required
 def bookings():
-    """US11 - a user's own booking history, so it requires a session."""
-    return render_template('bookings.html')
+    """US11 - a user's own booking history, so it requires a session.
+
+    Filtered by the session user, never by an id in the URL, so nobody can
+    page through someone else's tickets. Newest first so an order placed a
+    moment ago is the first thing the user sees (US8 AC5).
+    """
+    orders = db.session.scalars(
+        db.select(Booking)
+        .where(Booking.user_id == current_user.id)
+        .order_by(Booking.booked_at.desc())
+    ).all()
+    return render_template('bookings.html', bookings=orders)
 
 
 @main_bp.route('/aoc')
