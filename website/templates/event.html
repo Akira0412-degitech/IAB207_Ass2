@@ -22,7 +22,9 @@
       <h1 class="mt-2" style="font-size:clamp(2.2rem,6vw,3.5rem);">{{ event.title }}</h1>
       <p class="meta">{{ event.genre }} · {{ event.event_date.strftime('%A %d %B %Y') }} · {{ event.venue_name }}</p>
 
-      <img src="{{ url_for('static', filename='img/' ~ event.image_filename) }}"
+      <!-- image_filename is stored relative to static/, so seeded posters
+           and user uploads both resolve the same way. -->
+      <img src="{{ url_for('static', filename=event.image_filename) }}"
            alt="Gig poster for {{ event.title }} at {{ event.venue_name }}"
            class="detail-poster my-3">
 
@@ -77,12 +79,30 @@
       </div>
       {% endif %}
 
-      <!-- US6: anybody can read the comments, whatever the gig's status.
-           Posting them is US7 in Sprint 2. -->
+      <!-- US6 reading / US7 posting. Anybody can read; only a signed-in
+           visitor sees the form, and the link below carries ?next= so
+           logging in returns them to this page. -->
       <section aria-labelledby="comments-heading">
         <div class="rule-heading">
           <h2 id="comments-heading">Comments ({{ comments|length }})</h2>
         </div>
+
+        {% if current_user.is_authenticated %}
+        <form class="my-4" method="post"
+              action="{{ url_for('main.post_comment', event_id=event.id) }}">
+          {{ form.hidden_tag() }}
+          <label for="body" class="form-label">Add a comment</label>
+          {{ form.body(class="form-control", id="body", rows="3",
+                       placeholder="Ask about set times, parking, or the support acts") }}
+          <div class="form-text mb-3">Posting as {{ current_user.first_name }} {{ current_user.surname }}. Your name and the date will be shown.</div>
+          <button type="submit" class="btn btn-ink">Post comment</button>
+        </form>
+        {% else %}
+        <p class="my-4">
+          <a href="{{ url_for('auth.login', next=url_for('main.event_detail', event_id=event.id)) }}">Log in</a>
+          to post a comment.
+        </p>
+        {% endif %}
 
         {% for comment in comments %}
         <article class="comment">
@@ -99,8 +119,9 @@
 
     </div>
 
-    <!-- Right: booking (US8). The /book routes enforce the same Open rule,
-         so these branches are for clarity, not security. -->
+    <!-- Right: booking (US8), plus the creator's own controls (US14).
+         The /book routes enforce the same Open rule and both US14 routes
+         re-check ownership, so these branches are for clarity, not security. -->
     <div class="col-lg-4">
       <div class="booking-box">
         <p class="meta mb-1">General admission</p>
@@ -125,6 +146,31 @@
         {% else %}
         <p class="status status-inactive d-block text-center">Event finished</p>
         <p class="form-text mt-2 mb-0">This gig has already taken place.</p>
+        {% endif %}
+
+        <!-- US14: only the creator sees these controls, and both routes
+             check ownership again on the server - hiding a button is not
+             access control. -->
+        {% if current_user.is_authenticated and current_user.id == event.creator_id %}
+        <hr class="my-3">
+        <p class="meta mb-2">You created this gig</p>
+
+        {% if event.status == 'Inactive' %}
+        <p class="form-text mb-0">Past gigs can no longer be edited.</p>
+        {% else %}
+        <a href="{{ url_for('main.edit_event', event_id=event.id) }}"
+           class="btn btn-outline-ink w-100 mb-2">Edit details</a>
+
+        {% if not event.is_cancelled %}
+        <!-- Cancelling is a POST with its own CSRF token so it can never be
+             triggered by following a link or by a crawler. -->
+        <form method="post" action="{{ url_for('main.cancel_event', event_id=event.id) }}">
+          {{ cancel_form.hidden_tag() }}
+          {{ cancel_form.submit(class="btn btn-outline-ink w-100") }}
+        </form>
+        <p class="form-text mt-2 mb-0">Cancelling cannot be undone.</p>
+        {% endif %}
+        {% endif %}
         {% endif %}
       </div>
     </div>

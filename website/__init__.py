@@ -1,4 +1,6 @@
 # import flask - from 'package' import 'Class'
+import os
+
 from flask import Flask, render_template
 from flask_bootstrap import Bootstrap5
 from flask_sqlalchemy import SQLAlchemy
@@ -17,6 +19,14 @@ def create_app():
     app.secret_key = 'somesecretkey'
     # set the app configuration data
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///sitedata.sqlite'
+
+    # US12 - uploaded posters live in their own folder so the seeded images
+    # in static/img stay in the repo while user uploads do not. Git cannot
+    # track an empty directory, so create it here or the first upload on a
+    # fresh clone fails with FileNotFoundError.
+    app.config['UPLOAD_FOLDER'] = os.path.join(app.static_folder, 'img', 'uploads')
+    os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+
     # initialise db with flask app
     db.init_app(app)
 
@@ -67,6 +77,17 @@ def create_app():
     # --- US19: custom error handlers ---
     # Registered after blueprints so get_or_404() calls in views also route
     # here rather than showing Flask's default HTML error pages.
+
+    @app.errorhandler(403)
+    def forbidden(e):
+        """US14 - a creator-only action attempted by somebody else.
+
+        abort(403) in the edit and cancel views routes here, so those call
+        sites do not need to build their own response. Note this is about
+        ownership, not authentication: a visitor who is not logged in at all
+        is sent to the login page by @login_required instead.
+        """
+        return render_template('403.html'), 403
 
     @app.errorhandler(404)
     def page_not_found(e):
