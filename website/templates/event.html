@@ -22,7 +22,9 @@
       <h1 class="mt-2" style="font-size:clamp(2.2rem,6vw,3.5rem);">{{ event.title }}</h1>
       <p class="meta">{{ event.genre }} · {{ event.event_date.strftime('%A %d %B %Y') }} · {{ event.venue_name }}</p>
 
-      <img src="{{ url_for('static', filename='img/' ~ event.image_filename) }}"
+      <!-- image_filename is stored relative to static/, so seeded posters
+           and user uploads both resolve the same way. -->
+      <img src="{{ url_for('static', filename=event.image_filename) }}"
            alt="Gig poster for {{ event.title }} at {{ event.venue_name }}"
            class="detail-poster my-3">
 
@@ -63,11 +65,13 @@
         <li><span class="fact-key">Tickets remaining</span><span class="fact-val">{{ event.tickets_remaining }} of {{ event.tickets_total }}</span></li>
       </ul>
 
-      <!-- US5: the Acknowledgement is only shown when the creator chose one. -->
-      {% if event.aoc_type == 'enhanced' and event.aoc_group %}
+      <!-- US5/US13: an enhanced Acknowledgement shows the creator's own
+           wording verbatim, which is what the guidance on the create form
+           promises. Generic shows a standard statement, none shows nothing. -->
+      {% if event.aoc_type == 'enhanced' and event.aoc_statement %}
       <div class="aoc mb-4">
         <p class="meta mb-2">Acknowledgement of Country</p>
-        <p class="mb-0">We acknowledge the {{ event.aoc_group }} as the Traditional Custodians of the land on which this event takes place, and pay our respects to Elders past and present. This always was, and always will be, Aboriginal land.</p>
+        <p class="mb-0">{{ event.aoc_statement }}</p>
       </div>
       {% elif event.aoc_type == 'generic' %}
       <div class="aoc mb-4">

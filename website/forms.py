@@ -1,11 +1,23 @@
+from datetime import date
+
 from flask_wtf import FlaskForm
+from flask_wtf.file import FileField, FileRequired, FileAllowed
 from wtforms.fields import (SubmitField, StringField, PasswordField,
-                            RadioField, TextAreaField)
-from wtforms.validators import InputRequired, Email, EqualTo, Length, Regexp
+                            RadioField, TextAreaField, SelectField,
+                            DateField, TimeField, DecimalField, IntegerField)
+from wtforms.validators import (InputRequired, Email, EqualTo, Length,
+                                Regexp, NumberRange, Optional)
 from wtforms import ValidationError
 
 from .models import User
 from . import db
+
+GENRES = [
+    'Rock / Punk', 'Metal / Heavy', 'Electronic',
+    'Hip-Hop / R&B', 'Jazz / Blues', 'Folk / Acoustic',
+]
+
+AGE_RESTRICTIONS = ['All ages', '15+', '18+']
 
 
 class LoginForm(FlaskForm):
@@ -73,8 +85,68 @@ class RegisterForm(FlaskForm):
 
 
 class EventForm(FlaskForm):
-    """US13 - Acknowledgement of Country section of the gig listing form."""
+    """US12 - create a gig listing. US13 adds the Acknowledgement section."""
 
+    # --- The gig ------------------------------------------------------
+    title = StringField("Gig title", validators=[
+        InputRequired('Enter a title for your gig'),
+        Length(max=120),
+    ])
+    description = TextAreaField("Description", validators=[
+        InputRequired('Describe the gig'),
+    ])
+    genre = SelectField("Genre",
+                        choices=[('', 'Choose a genre')] + [(g, g) for g in GENRES],
+                        validators=[InputRequired('Choose a genre')])
+    age_restriction = SelectField(
+        "Age restriction",
+        choices=[('', 'Choose a restriction')] + [(a, a) for a in AGE_RESTRICTIONS],
+        validators=[InputRequired('Choose an age restriction')])
+
+    # --- Lineup -------------------------------------------------------
+    # Only the headline act is required; the two support slots are optional,
+    # which is why the model allows artist_2 and artist_3 to be null.
+    artist_1 = StringField("Headline act", validators=[
+        InputRequired('Name the headline act'),
+        Length(max=120),
+    ])
+    artist_1_time = TimeField("Set time", validators=[Optional()])
+    artist_2 = StringField("Support act", validators=[Optional(), Length(max=120)])
+    artist_2_time = TimeField("Set time", validators=[Optional()])
+    artist_3 = StringField("Support act", validators=[Optional(), Length(max=120)])
+    artist_3_time = TimeField("Set time", validators=[Optional()])
+
+    # --- When and where -----------------------------------------------
+    event_date = DateField("Date", validators=[
+        InputRequired('Enter the date of the gig'),
+    ])
+    doors_time = TimeField("Doors open", validators=[Optional()])
+    end_time = TimeField("Finishes", validators=[Optional()])
+    venue_name = StringField("Venue", validators=[
+        InputRequired('Enter the venue'),
+        Length(max=120),
+    ])
+    venue_address = StringField("Street address", validators=[
+        Optional(), Length(max=200),
+    ])
+
+    # --- Tickets --------------------------------------------------------
+    ticket_price = DecimalField("Ticket price (AUD)", places=2, validators=[
+        InputRequired('Enter a ticket price'),
+        NumberRange(min=0.01, message='Ticket price must be greater than zero'),
+    ])
+    tickets_total = IntegerField("Tickets available", validators=[
+        InputRequired('Enter how many tickets are available'),
+        NumberRange(min=1, message='There must be at least one ticket'),
+    ])
+
+    # --- Poster ---------------------------------------------------------
+    image = FileField("Gig image", validators=[
+        FileRequired('Upload a poster for the gig'),
+        FileAllowed(['jpg', 'jpeg', 'png'], 'JPG or PNG images only'),
+    ])
+
+    # --- Acknowledgement of Country (US13) -------------------------------
     aoc_type = RadioField("Acknowledgement of Country", choices=[
         ('none', 'No Acknowledgement of Country'),
         ('generic', 'Generic'),
@@ -88,7 +160,17 @@ class EventForm(FlaskForm):
         Length(max=200),
     ])
     aoc_statement = TextAreaField("Your Acknowledgement of Country")
-    # TODO(#14): add remaining event fields (title, description, genre, venue, tickets, lineup, image, etc.) and the full creation logic.
+
+    submit = SubmitField("Publish gig")
+
+    def validate_event_date(self, field):
+        """US12 - a gig cannot be listed for a date that has already passed.
+
+        Without this the event would be created and immediately read back as
+        Inactive, which is confusing rather than useful.
+        """
+        if field.data and field.data < date.today():
+            raise ValidationError('Event date must be in the future')
 
     def validate_aoc_group(self, field):
         """US13 - an enhanced Acknowledgement is meaningless without a named group."""
@@ -98,18 +180,24 @@ class EventForm(FlaskForm):
 
     def validate_aoc_statement(self, field):
         """US13 - block tokenistic wording: the statement must name the
-        custodians entered above, not be boilerplate that fits any venue."""
+        custodians entered above and the venue, not be boilerplate that
+        fits any gig anywhere."""
         if self.aoc_type.data != 'enhanced':
             return
         statement = (field.data or '').strip()
         if not statement:
             raise ValidationError('Write your Acknowledgement of Country statement')
+        lowered = statement.lower()
         group = (self.aoc_group.data or '').strip().lower()
         # An empty group is already reported by validate_aoc_group.
-        if group and group not in statement.lower():
+        if group and group not in lowered:
             raise ValidationError('Name the Traditional Custodians you entered '
                                   'above in your statement')
-        # TODO(#14): also require the venue name/suburb once those fields exist
+        venue = (self.venue_name.data or '').strip().lower()
+        if venue and venue not in lowered:
+            raise ValidationError('Mention the venue ({}) so the Acknowledgement '
+                                  'is specific to where this gig is held'
+                                  .format(self.venue_name.data))
 
 
 class CommentForm(FlaskForm):

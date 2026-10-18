@@ -6,7 +6,9 @@ Run from the project root with the virtual environment active:
 
 WARNING: this drops every table first, so any accounts or bookings you
 created by hand are destroyed. That is deliberate - it means everyone on
-the team can get to an identical, known state before testing.
+the team can get to an identical, known state before testing. It is also
+the only way to pick up a new column, because db.create_all() in
+create_app() creates missing tables but never alters existing ones.
 
 The data below covers all four event statuses so the landing page,
 genre filter, search and booking history can all be demonstrated:
@@ -17,6 +19,10 @@ genre filter, search and booking history can all be demonstrated:
 
 Dates are relative to today rather than hard-coded, so the demo data
 never goes stale and "Inactive" always means genuinely past.
+
+Image paths are stored relative to static/ (e.g. 'img/gig-halcyon.jpg')
+so that seeded posters and user uploads under 'img/uploads/' both render
+through a single url_for('static', filename=event.image_filename).
 """
 
 from datetime import date, time, timedelta, datetime
@@ -95,19 +101,20 @@ def seed():
             )
 
         halcyon = make_event(
-            'Halcyon Drift', 
+            'Halcyon Drift',
             'Halcyon Drift have spent two years playing to eighty people in '
             'rooms with bad ceilings, and this is the last show before they '
             'leave for the east coast run. The new material is louder and '
             'considerably less polite than the EP.',
-            'gig-halcyon.jpg', 'Rock / Punk', '18+', 21,
+            'img/gig-halcyon.jpg', 'Rock / Punk', '18+', 21,
             'The Zoo', '711 Ann Street, Fortitude Valley', 28.00, 220,
             [('Halcyon Drift', time(21, 15)),
              ('Slow Tourist', time(20, 35)),
              ('Paper Ferns', time(20, 0))],
-            aoc_type='enhanced', aoc_group='Turrbal and Yuggera peoples',
+            # Spelling follows the AoC page, which uses QUT's wording.
+            aoc_type='enhanced', aoc_group='Turrbal and Yugara peoples',
             aoc_statement=(
-                "We acknowledge the Turrbal and Yuggera peoples as the "
+                "We acknowledge the Turrbal and Yugara peoples as the "
                 "Traditional Custodians of the land on which The Zoo, "
                 "Fortitude Valley stands, and pay our respects to Elders "
                 "past, present and emerging. This gig takes place on "
@@ -119,7 +126,7 @@ def seed():
             'Quarry Belt',
             'Album launch. Two support acts, one very loud PA, and a merch '
             'desk that takes cash only.',
-            'gig-quarry.jpg', 'Metal / Heavy', '18+', 28,
+            'img/gig-quarry.jpg', 'Metal / Heavy', '18+', 28,
             'Crowbar', '243 Brunswick Street, Fortitude Valley', 35.00, 150,
             [('Quarry Belt', time(21, 30)),
              ('Ironbark', time(20, 45)),
@@ -130,7 +137,7 @@ def seed():
             'Low Tide Club',
             'Live modular set plus two support DJs. All ages, so bring the '
             'whole share house.',
-            'gig-lowtide.jpg', 'Electronic', 'All ages', 35,
+            'img/gig-lowtide.jpg', 'Electronic', 'All ages', 35,
             "Mo's Desert Clubhouse", '8 Sixth Avenue, Burleigh Heads', 22.00, 180,
             [('Low Tide Club', time(22, 0)),
              ('Saltbox', time(21, 0))],
@@ -140,7 +147,7 @@ def seed():
             'Fernway',
             'Six-piece, two sets, no support. Arrive early if you want a seat '
             'anywhere near the front.',
-            'gig-fernway.jpg', 'Jazz / Blues', 'All ages', 42,
+            'img/gig-fernway.jpg', 'Jazz / Blues', 'All ages', 42,
             'Miami Marketta', '23 Hillcrest Parade, Miami', 18.00, 120,
             [('Fernway', time(20, 30))],
             aoc_type='none',
@@ -150,7 +157,7 @@ def seed():
             'Verandah Saints',
             'Cancelled by the promoter after the venue double-booked the '
             'room. Refunds have been processed automatically.',
-            'gig-verandah.jpg', 'Folk / Acoustic', '18+', 14,
+            'img/gig-verandah.jpg', 'Folk / Acoustic', '18+', 14,
             'The Triffid', '7 Stratton Street, Newstead', 30.00, 300,
             [('Verandah Saints', time(21, 0)),
              ('Quiet Cattle', time(20, 15))],
@@ -161,7 +168,7 @@ def seed():
             'Pilot Light',
             'This gig has already happened. Comments stay open so people can '
             'argue about the setlist.',
-            'gig-pilotlight.jpg', 'Hip-Hop / R&B', '18+', -30,
+            'img/gig-pilotlight.jpg', 'Hip-Hop / R&B', '18+', -30,
             'The Bearded Lady', '138 Boundary Street, West End', 25.00, 100,
             [('Pilot Light', time(21, 45)),
              ('Nite Errand', time(21, 0))],

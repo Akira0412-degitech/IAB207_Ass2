@@ -78,7 +78,9 @@
       <div class="col">
         <a class="card-link-plain" href="{{ url_for('main.event_detail', event_id=event.id) }}">
           <article class="card gig-card{% if event.status == 'Cancelled' %} is-cancelled{% elif event.status == 'Inactive' %} is-past{% endif %}">
-            <img src="{{ url_for('static', filename='img/' ~ event.image_filename) }}"
+            <!-- image_filename is stored relative to static/, so seeded
+                 posters and user uploads both resolve the same way. -->
+            <img src="{{ url_for('static', filename=event.image_filename) }}"
                  class="card-img-top"
                  alt="Poster for {{ event.title }} at {{ event.venue_name }}">
             <div class="card-body">

@@ -2,6 +2,26 @@
 
 {% block title %}List a gig — Amplifi{% endblock %}
 
+{% macro field(f) %}
+  {# One field with its label and errors, so every field reports problems the
+     same way without repeating the markup eleven times. Extra HTML attributes
+     are passed as keyword arguments and picked up from Jinja's implicit
+     `kwargs` object, which must not be declared in the macro signature. #}
+  {{ f.label(class="form-label") }}
+  {{ f(class="form-control" + (" is-invalid" if f.errors else ""), **kwargs) }}
+  {% for error in f.errors %}
+  <div class="invalid-feedback d-block">{{ error }}</div>
+  {% endfor %}
+{% endmacro %}
+
+{% macro select(f) %}
+  {{ f.label(class="form-label") }}
+  {{ f(class="form-select" + (" is-invalid" if f.errors else "")) }}
+  {% for error in f.errors %}
+  <div class="invalid-feedback d-block">{{ error }}</div>
+  {% endfor %}
+{% endmacro %}
+
 {% block content %}
 <main class="container py-4">
 
@@ -10,43 +30,28 @@
       <h1 style="font-size:clamp(2rem,6vw,3rem);">List a gig</h1>
       <p class="meta mb-4">Only you can edit this listing after it's published. Status is set automatically.</p>
 
-      <form novalidate>
+      <!-- enctype is required for the poster upload: without it the browser
+           sends the filename only and FileRequired always fails. -->
+      <form method="post" enctype="multipart/form-data" novalidate>
+        {{ form.hidden_tag() }}
 
         <fieldset class="panel">
           <legend>The gig</legend>
 
           <div class="mb-3">
-            <label for="title" class="form-label">Gig title</label>
-            <input type="text" class="form-control" id="title" name="title" placeholder="Halcyon Drift — east coast send-off" required>
-            <div class="form-text">This is the headline shown on the home page.</div>
+            {{ field(form.title, placeholder="Halcyon Drift — east coast send-off") }}
+            <div class="form-text">This is the headline shown on the landing page.</div>
           </div>
 
           <div class="mb-3">
-            <label for="description" class="form-label">Description</label>
-            <textarea class="form-control" id="description" name="description" rows="5" placeholder="Who's playing, what to expect, anything punters need to know" required></textarea>
+            {{ field(form.description, rows="5",
+                     placeholder="Who's playing, what to expect, anything punters need to know") }}
           </div>
 
           <div class="row g-3">
+            <div class="col-md-6">{{ select(form.genre) }}</div>
             <div class="col-md-6">
-              <label for="genre" class="form-label">Genre</label>
-              <select class="form-select" id="genre" name="genre" required>
-                <option value="" selected disabled>Choose a genre</option>
-                <option>Rock / Punk</option>
-                <option>Metal / Heavy</option>
-                <option>Electronic</option>
-                <option>Hip-Hop / R&amp;B</option>
-                <option>Jazz / Blues</option>
-                <option>Folk / Acoustic</option>
-              </select>
-            </div>
-            <div class="col-md-6">
-              <label for="age" class="form-label">Age restriction</label>
-              <select class="form-select" id="age" name="age" required>
-                <option value="" selected disabled>Choose a restriction</option>
-                <option>All ages</option>
-                <option>15+</option>
-                <option>18+</option>
-              </select>
+              {{ select(form.age_restriction) }}
               <div class="form-text">Licensed venues are almost always 18+.</div>
             </div>
           </div>
@@ -54,38 +59,21 @@
 
         <fieldset class="panel">
           <legend>Lineup</legend>
+          <p class="form-text mb-3">The headline act is required. Leave the support slots blank if there are none.</p>
 
-          <div class="row g-3 align-items-end mb-3">
-            <div class="col-sm-7">
-              <label for="artist1" class="form-label">Headline act</label>
-              <input type="text" class="form-control" id="artist1" name="artist1" placeholder="Halcyon Drift" required>
-            </div>
-            <div class="col-sm-5">
-              <label for="set1" class="form-label">Set time</label>
-              <input type="time" class="form-control" id="set1" name="set1" value="21:15">
-            </div>
+          <div class="row g-3 align-items-start mb-3">
+            <div class="col-sm-7">{{ field(form.artist_1, placeholder="Halcyon Drift") }}</div>
+            <div class="col-sm-5">{{ field(form.artist_1_time) }}</div>
           </div>
 
-          <div class="row g-3 align-items-end mb-3">
-            <div class="col-sm-7">
-              <label for="artist2" class="form-label">Support act</label>
-              <input type="text" class="form-control" id="artist2" name="artist2" placeholder="Slow Tourist">
-            </div>
-            <div class="col-sm-5">
-              <label for="set2" class="form-label">Set time</label>
-              <input type="time" class="form-control" id="set2" name="set2" value="20:35">
-            </div>
+          <div class="row g-3 align-items-start mb-3">
+            <div class="col-sm-7">{{ field(form.artist_2, placeholder="Slow Tourist") }}</div>
+            <div class="col-sm-5">{{ field(form.artist_2_time) }}</div>
           </div>
 
-          <div class="row g-3 align-items-end">
-            <div class="col-sm-7">
-              <label for="artist3" class="form-label">Support act</label>
-              <input type="text" class="form-control" id="artist3" name="artist3" placeholder="Paper Ferns">
-            </div>
-            <div class="col-sm-5">
-              <label for="set3" class="form-label">Set time</label>
-              <input type="time" class="form-control" id="set3" name="set3" value="20:00">
-            </div>
+          <div class="row g-3 align-items-start">
+            <div class="col-sm-7">{{ field(form.artist_3, placeholder="Paper Ferns") }}</div>
+            <div class="col-sm-5">{{ field(form.artist_3_time) }}</div>
           </div>
         </fieldset>
 
@@ -93,32 +81,16 @@
           <legend>When and where</legend>
 
           <div class="row g-3">
-            <div class="col-md-4">
-              <label for="date" class="form-label">Date</label>
-              <input type="date" class="form-control" id="date" name="date" required>
-            </div>
-            <div class="col-6 col-md-4">
-              <label for="doors" class="form-label">Doors open</label>
-              <input type="time" class="form-control" id="doors" name="doors" required>
-            </div>
-            <div class="col-6 col-md-4">
-              <label for="finish" class="form-label">Finishes</label>
-              <input type="time" class="form-control" id="finish" name="finish" required>
-            </div>
+            <div class="col-md-4">{{ field(form.event_date) }}</div>
+            <div class="col-6 col-md-4">{{ field(form.doors_time) }}</div>
+            <div class="col-6 col-md-4">{{ field(form.end_time) }}</div>
           </div>
 
           <div class="row g-3 mt-0">
-            <div class="col-md-7">
-              <label for="venue" class="form-label">Venue</label>
-              <input type="text" class="form-control" id="venue" name="venue" placeholder="The Zoo" required>
-            </div>
-            <div class="col-md-5">
-              <label for="suburb" class="form-label">Suburb</label>
-              <input type="text" class="form-control" id="suburb" name="suburb" placeholder="Fortitude Valley" required>
-            </div>
-            <div class="col-12">
-              <label for="address" class="form-label">Street address</label>
-              <input type="text" class="form-control" id="address" name="address" placeholder="711 Ann Street">
+            <div class="col-md-6">{{ field(form.venue_name, placeholder="The Zoo") }}</div>
+            <div class="col-md-6">
+              {{ field(form.venue_address, placeholder="711 Ann Street, Fortitude Valley") }}
+              <div class="form-text">Include the suburb so punters know where to go.</div>
             </div>
           </div>
         </fieldset>
@@ -128,15 +100,18 @@
 
           <div class="row g-3">
             <div class="col-md-6">
-              <label for="price" class="form-label">Ticket price (AUD)</label>
+              {{ form.ticket_price.label(class="form-label") }}
               <div class="input-group">
                 <span class="input-group-text" style="border:2px solid #14110f;border-radius:0;">$</span>
-                <input type="number" class="form-control" id="price" name="price" min="0" step="0.50" placeholder="28.00" required>
+                {{ form.ticket_price(class="form-control" + (" is-invalid" if form.ticket_price.errors else ""),
+                                     placeholder="28.00", step="0.50") }}
               </div>
+              {% for error in form.ticket_price.errors %}
+              <div class="invalid-feedback d-block">{{ error }}</div>
+              {% endfor %}
             </div>
             <div class="col-md-6">
-              <label for="capacity" class="form-label">Tickets available</label>
-              <input type="number" class="form-control" id="capacity" name="capacity" min="1" placeholder="220" required>
+              {{ field(form.tickets_total, placeholder="220", min="1") }}
               <div class="form-text">The gig is marked sold out automatically when these run out.</div>
             </div>
           </div>
@@ -144,16 +119,16 @@
 
         <fieldset class="panel">
           <legend>Poster</legend>
-
-          <label for="image" class="form-label">Gig image</label>
-          <input type="file" class="form-control" id="image" name="image" accept="image/*">
-          <div class="form-text">Landscape works best. JPG or PNG, up to 5 MB.</div>
+          {{ field(form.image, accept="image/png, image/jpeg") }}
+          <div class="form-text">Landscape works best. JPG or PNG.</div>
         </fieldset>
 
         <fieldset class="panel">
           <legend>Acknowledgement of Country</legend>
 
-          <p class="mb-3">Choose how your listing acknowledges the Traditional Custodians of the land the gig is held on.</p>
+          <p class="mb-3">Choose how your listing acknowledges the Traditional Custodians of the land the gig is held on.
+            <a href="{{ url_for('main.aoc') }}">What is an Acknowledgement of Country?</a>
+          </p>
 
           {% set aoc_hints = {
             'none': 'Nothing is shown on your listing.',
@@ -181,20 +156,20 @@
 
             <div class="mt-3 mb-3">
               {{ form.aoc_group.label(class="form-label") }}
-              {{ form.aoc_group(class="form-control" + (" is-invalid" if form.aoc_group.errors else ""), placeholder="Turrbal and Yuggera peoples") }}
+              {{ form.aoc_group(class="form-control" + (" is-invalid" if form.aoc_group.errors else ""), placeholder="Turrbal and Yugara peoples") }}
               {% for error in form.aoc_group.errors %}
-              <div class="invalid-feedback">{{ error }}</div>
+              <div class="invalid-feedback d-block">{{ error }}</div>
               {% endfor %}
               <div class="form-text">Check with your local Land Council if you're unsure. Use the generic option rather than guessing.</div>
             </div>
 
             <div class="mb-3">
               {{ form.aoc_statement.label(class="form-label") }}
-              {{ form.aoc_statement(class="form-control" + (" is-invalid" if form.aoc_statement.errors else ""), rows=4, placeholder="We acknowledge the Turrbal and Yuggera peoples as the Traditional Custodians of the land on which The Zoo, Fortitude Valley stands...") }}
+              {{ form.aoc_statement(class="form-control" + (" is-invalid" if form.aoc_statement.errors else ""), rows=4, placeholder="We acknowledge the Turrbal and Yugara peoples as the Traditional Custodians of the land on which The Zoo, Fortitude Valley stands...") }}
               {% for error in form.aoc_statement.errors %}
-              <div class="invalid-feedback">{{ error }}</div>
+              <div class="invalid-feedback d-block">{{ error }}</div>
               {% endfor %}
-              <div class="form-text">Write it in your own words. It must name the Traditional Custodians you entered above, and is shown on your listing exactly as written.</div>
+              <div class="form-text">Write it in your own words. It must name the Traditional Custodians you entered above and your venue, and is shown on your listing exactly as written.</div>
             </div>
 
             <p class="mb-1"><strong>Find out whose Country your venue is on</strong></p>
@@ -216,8 +191,7 @@
         </fieldset>
 
         <div class="d-flex flex-wrap gap-2 mb-5">
-          <button type="submit" class="btn btn-ink">Publish gig</button>
-          <button type="button" class="btn btn-outline-ink">Save as draft</button>
+          {{ form.submit(class="btn btn-ink") }}
           <a href="{{ url_for('main.index') }}" class="btn btn-outline-ink">Cancel</a>
         </div>
 
