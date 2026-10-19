@@ -6,14 +6,22 @@ from flask_bootstrap import Bootstrap5
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 import sqlalchemy.exc
+from werkzeug.routing import IntegerConverter
 
 db = SQLAlchemy()
+
+
+class SQLiteIntegerConverter(IntegerConverter):
+    def __init__(self, map, *args, **kwargs):
+        kwargs.setdefault('max', 2 ** 63 - 1)
+        super().__init__(map, *args, **kwargs)
 
 # create a function that creates a web application
 # a web server will run this web application
 def create_app():
 
     app = Flask(__name__)  # this is the name of the module/package that is calling this app
+    app.url_map.converters['int'] = SQLiteIntegerConverter
     # Should be set to false in a production environment
     app.debug = True
     app.secret_key = 'somesecretkey'
