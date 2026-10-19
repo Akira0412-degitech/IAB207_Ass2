@@ -5,7 +5,7 @@ from flask_wtf.file import FileField, FileRequired, FileAllowed
 from wtforms.fields import (SubmitField, StringField, PasswordField,
                             RadioField, TextAreaField, SelectField,
                             DateField, TimeField, DecimalField, IntegerField)
-from wtforms.validators import (InputRequired, Email, EqualTo, Length,
+from wtforms.validators import (InputRequired, DataRequired, Email, EqualTo, Length,
                                 Regexp, NumberRange, Optional, StopValidation)
 from wtforms import ValidationError
 
@@ -133,11 +133,13 @@ class EventForm(FlaskForm):
     # --- Tickets --------------------------------------------------------
     ticket_price = DecimalField("Ticket price (AUD)", places=2, validators=[
         InputRequired('Enter a ticket price'),
-        NumberRange(min=0.01, message='Ticket price must be greater than zero'),
+        NumberRange(min=1, message='Ticket price must be greater than zero'),
+        NumberRange(max=9999, message='Ticket price must be $9,999 or less'),
     ])
     tickets_total = IntegerField("Tickets available", validators=[
         InputRequired('Enter how many tickets are available'),
         NumberRange(min=1, message='There must be at least one ticket'),
+        NumberRange(max=100000, message='There can be at most 100,000 tickets'),
     ])
 
     # --- Poster ---------------------------------------------------------
@@ -171,6 +173,14 @@ class EventForm(FlaskForm):
         """
         if field.data and field.data < date.today():
             raise ValidationError('Event date must be in the future')
+
+    def validate_ticket_price(self, field):
+        if field.data is not None and field.data != field.data.to_integral_value():
+            raise ValidationError('Ticket price must be a whole number')
+
+    def validate_end_time(self, field):
+        if field.data and self.doors_time.data and field.data <= self.doors_time.data:
+            raise ValidationError('Finish time must be after doors open')
 
     def validate_aoc_group(self, field):
         """US13 - an enhanced Acknowledgement is meaningless without a named group."""
@@ -235,7 +245,7 @@ class CommentForm(FlaskForm):
     """
 
     body = TextAreaField("Add a comment", validators=[
-        InputRequired('Write something before posting'),
+        DataRequired('Write something before posting'),
         Length(max=1000, message='Keep comments under 1000 characters'),
     ])
     submit = SubmitField("Post comment")
