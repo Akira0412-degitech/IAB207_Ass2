@@ -1,11 +1,11 @@
-from datetime import date
+from datetime import date, timedelta
 
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileRequired, FileAllowed
 from wtforms.fields import (SubmitField, StringField, PasswordField,
                             RadioField, TextAreaField, SelectField,
                             DateField, TimeField, DecimalField, IntegerField)
-from wtforms.validators import (InputRequired, Email, EqualTo, Length,
+from wtforms.validators import (InputRequired, DataRequired, Email, EqualTo, Length,
                                 Regexp, NumberRange, Optional, StopValidation)
 from wtforms import ValidationError
 
@@ -37,11 +37,11 @@ class RegisterForm(FlaskForm):
     """US15 - new users register with the six details required by the brief."""
 
     first_name = StringField("First name", validators=[
-        InputRequired('Enter your first name'),
+        DataRequired('Enter your first name'),
         Length(max=50),
     ])
     surname = StringField("Surname", validators=[
-        InputRequired('Enter your surname'),
+        DataRequired('Enter your surname'),
         Length(max=50),
     ])
     email = StringField("Email address", validators=[
@@ -56,7 +56,7 @@ class RegisterForm(FlaskForm):
                message='Enter a contact number of 8 to 15 digits, numbers only'),
     ])
     street_address = StringField("Street address", validators=[
-        InputRequired('Enter your street address'),
+        DataRequired('Enter your street address'),
         Length(max=200),
     ])
 
@@ -78,10 +78,14 @@ class RegisterForm(FlaskForm):
         during validate_on_submit(), so this needs no wiring in the view.
         """
         existing = db.session.scalar(
-            db.select(User).where(User.email == field.data)
+            db.select(User).where(db.func.lower(User.email) == field.data.lower())
         )
         if existing is not None:
             raise ValidationError('That email address is already registered')
+
+    def validate_password(self, field):
+        if len(field.data.encode('utf-8')) > 72:
+            raise ValidationError('Use a shorter password (at most 72 bytes)')
 
 
 class EventForm(FlaskForm):
@@ -89,11 +93,11 @@ class EventForm(FlaskForm):
 
     # --- The gig ------------------------------------------------------
     title = StringField("Gig title", validators=[
-        InputRequired('Enter a title for your gig'),
+        DataRequired('Enter a title for your gig'),
         Length(max=120),
     ])
     description = TextAreaField("Description", validators=[
-        InputRequired('Describe the gig'),
+        DataRequired('Describe the gig'),
     ])
     genre = SelectField("Genre",
                         choices=[('', 'Choose a genre')] + [(g, g) for g in GENRES],
@@ -107,7 +111,7 @@ class EventForm(FlaskForm):
     # Only the headline act is required; the two support slots are optional,
     # which is why the model allows artist_2 and artist_3 to be null.
     artist_1 = StringField("Headline act", validators=[
-        InputRequired('Name the headline act'),
+        DataRequired('Name the headline act'),
         Length(max=120),
     ])
     artist_1_time = TimeField("Set time", validators=[Optional()])
@@ -123,7 +127,7 @@ class EventForm(FlaskForm):
     doors_time = TimeField("Doors open", validators=[Optional()])
     end_time = TimeField("Finishes", validators=[Optional()])
     venue_name = StringField("Venue", validators=[
-        InputRequired('Enter the venue'),
+        DataRequired('Enter the venue'),
         Length(max=120),
     ])
     venue_address = StringField("Street address", validators=[
@@ -133,11 +137,13 @@ class EventForm(FlaskForm):
     # --- Tickets --------------------------------------------------------
     ticket_price = DecimalField("Ticket price (AUD)", places=2, validators=[
         InputRequired('Enter a ticket price'),
-        NumberRange(min=0.01, message='Ticket price must be greater than zero'),
+        NumberRange(min=1, message='Ticket price must be greater than zero'),
+        NumberRange(max=9999, message='Ticket price must be $9,999 or less'),
     ])
     tickets_total = IntegerField("Tickets available", validators=[
         InputRequired('Enter how many tickets are available'),
         NumberRange(min=1, message='There must be at least one ticket'),
+        NumberRange(max=100000, message='There can be at most 100,000 tickets'),
     ])
 
     # --- Poster ---------------------------------------------------------
@@ -171,6 +177,16 @@ class EventForm(FlaskForm):
         """
         if field.data and field.data < date.today():
             raise ValidationError('Event date must be in the future')
+        if field.data and field.data > date.today() + timedelta(days=730):
+            raise ValidationError('Event date must be within the next two years')
+
+    def validate_ticket_price(self, field):
+        if field.data is not None and field.data != field.data.to_integral_value():
+            raise ValidationError('Ticket price must be a whole number')
+
+    def validate_end_time(self, field):
+        if field.data and self.doors_time.data and field.data <= self.doors_time.data:
+            raise ValidationError('Finish time must be after doors open')
 
     def validate_aoc_group(self, field):
         """US13 - an enhanced Acknowledgement is meaningless without a named group."""
@@ -235,10 +251,14 @@ class CommentForm(FlaskForm):
     """
 
     body = TextAreaField("Add a comment", validators=[
-        InputRequired('Write something before posting'),
+        DataRequired('Write something before posting'),
         Length(max=1000, message='Keep comments under 1000 characters'),
     ])
     submit = SubmitField("Post comment")
+
+    def validate_body(self, field):
+        if '\x00' in (field.data or ''):
+            raise ValidationError('Remove the invalid characters from your comment')
 
 
 class TicketQuantityField(IntegerField):

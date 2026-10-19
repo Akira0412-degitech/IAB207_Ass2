@@ -86,6 +86,16 @@ button:focus-visible,
   text-decoration-color: var(--riso-pink);
 }
 
+.navbar-amplifi .btn-outline-ink {
+  color: var(--paper);
+  border-color: var(--paper);
+}
+
+.navbar-amplifi .btn-outline-ink:hover {
+  background: var(--paper);
+  color: var(--ink);
+}
+
 /* ---------- Hero ---------- */
 
 .hero {

@@ -30,12 +30,15 @@ def login():
     if login_form.validate_on_submit():
         email = login_form.email.data
         password = login_form.password.data
-        user = db.session.scalar(db.select(User).where(User.email == email))
+        user = db.session.scalar(
+            db.select(User).where(db.func.lower(User.email) == email.lower())
+        )
  
         # US16: the same message is shown whether the email is unknown or the
         # password is wrong, so the form cannot be used to discover which
         # email addresses have accounts.
-        if user is None or not check_password_hash(user.password_hash, password):
+        if (user is None or len(password.encode('utf-8')) > 72
+                or not check_password_hash(user.password_hash, password)):
             flash('Incorrect email or password')
         else:
             login_user(user)
@@ -63,7 +66,7 @@ def register():
         user = User(
             first_name=register_form.first_name.data,
             surname=register_form.surname.data,
-            email=register_form.email.data,
+            email=register_form.email.data.lower(),
             password_hash=password_hash,
             contact_number=register_form.contact_number.data,
             street_address=register_form.street_address.data,

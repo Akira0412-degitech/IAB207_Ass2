@@ -137,6 +137,15 @@ def _has_enough_tickets(form, event):
     return False
 
 
+def _covers_booked_tickets(form, event):
+    booked = event.tickets_total - event.tickets_remaining
+    if form.tickets_total.data >= booked:
+        return True
+    form.tickets_total.errors.append(
+        'Tickets available cannot be lower than the {} already booked'.format(booked))
+    return False
+
+
 @main_bp.route('/')
 def index():
     """US1, US2, US3, US4 - landing page.
@@ -401,7 +410,7 @@ def edit_event(event_id):
     # POST, so the creator sees their current details rather than a blank form.
     form = EventEditForm(obj=event)
 
-    if form.validate_on_submit():
+    if form.validate_on_submit() and _covers_booked_tickets(form, event):
         _apply_form_to_event(form, event)
         # The poster is handled outside _apply_form_to_event so that leaving
         # the file input empty keeps the existing image rather than clearing it.

@@ -108,7 +108,7 @@
         <article class="comment">
           <div class="d-flex flex-wrap justify-content-between gap-2">
             <span class="comment-author">{{ comment.user.first_name }} {{ comment.user.surname }}</span>
-            <span class="meta">{{ comment.created_at.strftime('%d %b %Y, %I:%M %p')|lower }}</span>
+            <span class="meta">{{ comment.created_at|local_time }}</span>
           </div>
           <p class="mb-0 mt-1">{{ comment.body }}</p>
         </article>
