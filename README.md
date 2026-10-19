@@ -1,5 +1,34 @@
 # IAB207_Ass2
 
+## Running the site
+
+```
+python main.py
+```
+
+Run it from the project root with the virtual environment active, then open http://127.0.0.1:5000.
+
+By default the site runs with debug mode off, so an error shows the custom 500 page instead of the Werkzeug debugger. Two environment variables change this:
+
+| Variable | Effect |
+|---|---|
+| `FLASK_DEBUG=1` | Turns debug mode on: the server restarts itself when you save a `.py` or template file, and errors show the interactive debugger. |
+| `SECRET_KEY` | Signs session cookies. If it is not set, a random key is generated each time the server starts, so everyone is logged out after a restart. |
+
+For development, set both so saved changes reload automatically and you stay logged in across reloads (PowerShell):
+
+```
+$env:FLASK_DEBUG="1"; $env:SECRET_KEY="dev-only-key"; python main.py
+```
+
+On macOS or Linux:
+
+```
+FLASK_DEBUG=1 SECRET_KEY=dev-only-key python main.py
+```
+
+Leave `FLASK_DEBUG` unset when checking the error pages: the custom 500 page only appears with debug mode off. Never use `dev-only-key` outside your own machine.
+
 ## Demo data
 
 Load demo users, events, bookings and comments with:

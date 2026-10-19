@@ -1,5 +1,6 @@
 # import flask - from 'package' import 'Class'
 import os
+import secrets
 
 from flask import Flask, render_template
 from flask_bootstrap import Bootstrap5
@@ -23,8 +24,8 @@ def create_app():
     app = Flask(__name__)  # this is the name of the module/package that is calling this app
     app.url_map.converters['int'] = SQLiteIntegerConverter
     # Should be set to false in a production environment
-    app.debug = True
-    app.secret_key = 'somesecretkey'
+    app.debug = os.environ.get('FLASK_DEBUG') == '1'
+    app.secret_key = os.environ.get('SECRET_KEY') or secrets.token_hex(32)
     # set the app configuration data
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///sitedata.sqlite'
 
